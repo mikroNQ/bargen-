@@ -8,10 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Generator ET">
-    
     <meta name="theme-color" content="#f5f5f5">
-    
-    <link rel="apple-touch-icon" href="icon.png"> 
     
     <title>Генератор 1D, 2D</title>
     
@@ -29,7 +26,6 @@
             --purple: #8b5cf6; 
             --dark: #1f2937; 
             --radius: 12px;
-            /* Safe area for iPhone notch/home bar */
             --safe-bottom: env(safe-area-inset-bottom);
             --safe-top: env(safe-area-inset-top);
         }
@@ -39,148 +35,53 @@
             -webkit-tap-highlight-color: transparent; 
         }
         
-        html {
-            height: 100%;
-            /* Prevents bounce scroll on iOS */
-            overscroll-behavior-y: none; 
-        }
+        html { height: 100%; overscroll-behavior-y: none; }
 
         body { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            min-height: 100dvh; /* Dynamic viewport height */
+            margin: 0; padding: 0; width: 100%; min-height: 100dvh; 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             background: linear-gradient(135deg, #f5f5f5 0%, #e8e0d5 100%); 
             font-size: 14px;
-            /* Smooth scrolling */
             -webkit-overflow-scrolling: touch;
             padding-top: max(15px, var(--safe-top));
             padding-bottom: max(40px, var(--safe-bottom));
-            padding-left: 15px;
-            padding-right: 15px;
+            padding-left: 15px; padding-right: 15px;
         }
         
         .container { max-width: 550px; margin: 0 auto; }
         
         .card { 
-            background: white; 
-            border-radius: 20px; 
+            background: white; border-radius: 20px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
-            padding: 20px; 
-            margin-bottom: 15px; 
+            padding: 20px; margin-bottom: 15px; 
         }
         
         h1 { color: #333; font-size: 1.4em; margin: 0 0 20px 0; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
         
         /* --- TABS --- */
-        .tabs { 
-            display: flex; flex-wrap: wrap; 
-            background: var(--light); 
-            border-radius: 14px; 
-            padding: 4px; 
-            margin-bottom: 20px; 
-            gap: 4px; 
-        }
-        .tab-btn { 
-            flex: 1 1 auto; 
-            padding: 12px 10px; /* Bigger touch target */
-            border: none; 
-            background: transparent; 
-            cursor: pointer; 
-            font-size: 0.9em; 
-            font-weight: 500; 
-            color: var(--gray); 
-            border-radius: 10px; 
-            transition: all 0.2s; 
-            white-space: nowrap; 
-            text-align: center;
-            touch-action: manipulation;
-        }
+        .tabs { display: flex; flex-wrap: wrap; background: var(--light); border-radius: 14px; padding: 4px; margin-bottom: 20px; gap: 4px; }
+        .tab-btn { flex: 1 1 auto; padding: 12px 10px; border: none; background: transparent; cursor: pointer; font-size: 0.9em; font-weight: 500; color: var(--gray); border-radius: 10px; transition: all 0.2s; white-space: nowrap; text-align: center; touch-action: manipulation; }
         .tab-btn.active { background: white; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-weight: 600; }
         .tab-content { display: none; animation: fadeIn 0.25s ease-out; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- FORMS & INPUTS --- */
-        .add-form, .barcode-form, .weight-carousel-form, .simple-gen-form { 
-            background: var(--light); 
-            border-radius: 16px; 
-            padding: 18px; 
-            margin-bottom: 15px; 
-            border: 1px solid white;
-        }
-
+        .add-form, .barcode-form, .weight-carousel-form, .simple-gen-form { background: var(--light); border-radius: 16px; padding: 18px; margin-bottom: 15px; border: 1px solid white; }
         .form-group { margin-bottom: 15px; }
-        
-        .form-group label { 
-            display: block; 
-            font-size: 0.9em; 
-            font-weight: 600; 
-            color: #4b5563; 
-            margin-bottom: 8px; 
-            margin-left: 2px;
-        }
+        .form-group label { display: block; font-size: 0.9em; font-weight: 600; color: #4b5563; margin-bottom: 8px; margin-left: 2px; }
 
-        /* iOS Input Optimization */
-        input[type="text"], 
-        input[type="number"], 
-        select, 
-        textarea { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid var(--border); 
-            border-radius: var(--radius); 
-            /* 16px prevents zoom on iOS focus */
-            font-size: 16px; 
-            background: white;
-            transition: border-color 0.2s, box-shadow 0.2s; 
-            appearance: none;
-            -webkit-appearance: none;
-            line-height: 1.4;
-            color: #1f2937;
-        }
-        
-        select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.8rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-        }
-
-        input:focus, select:focus, textarea:focus { 
-            outline: none; 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); 
-        }
-
-        textarea { 
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; 
-            resize: vertical; 
-            min-height: 100px;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 8px;
-            align-items: stretch;
-        }
-        .input-group > * { height: 48px; } /* Taller for mobile touch */
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 16px; background: white; transition: border-color 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none; line-height: 1.4; color: #1f2937; }
+        select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.8rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        textarea { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; resize: vertical; min-height: 100px; }
+        .input-group { display: flex; gap: 8px; align-items: stretch; }
+        .input-group > * { height: 48px; }
         .input-group input, .input-group select { height: 100%; }
 
         /* --- BUTTONS --- */
-        .btn { 
-            border: none; border-radius: 20px; padding: 12px 24px; 
-            font-size: 0.95em; font-weight: 600; cursor: pointer; 
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
-            transition: transform 0.1s, opacity 0.2s; 
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation; /* Faster clicks */
-        }
+        .btn { border: none; border-radius: 20px; padding: 12px 24px; font-size: 0.95em; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s, opacity 0.2s; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
         .btn:active { transform: scale(0.96); opacity: 0.9; }
-        
         .btn-primary { background: linear-gradient(145deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
         .btn-success { background: linear-gradient(145deg, var(--success), #059669); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
         .btn-warning { background: linear-gradient(145deg, var(--warning), #d97706); color: white; }
@@ -190,7 +91,6 @@
         .btn-dark { background: var(--dark); color: white; }
         .btn-outline { background: white; border: 2px solid #e5e7eb; color: var(--gray); }
         .btn-sm { padding: 8px 14px; font-size: 0.85em; border-radius: 14px; }
-        
         .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
         .controls { text-align: center; margin-top: 20px; }
 
@@ -198,72 +98,59 @@
         #code-container { background: var(--light); border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center; border: 1px dashed var(--border); }
         #datamatrix-container { width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         #datamatrix-container canvas { width: 180px !important; height: 180px !important; }
-        
         .mode-badge { display: inline-block; padding: 6px 12px; border-radius: 12px; font-size: 0.75em; font-weight: 600; margin-bottom: 12px; }
         .mode-badge.default { display: none; }
         .mode-badge.list { background: #fef3c7; color: #92400e; }
-        
         .code-info { background: #e0f2fe; border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 0.85em; }
         .code-info .label { color: #0369a1; font-weight: 500; }
         .code-info .value { font-family: monospace; color: #0c4a6e; font-weight: 700; font-size: 1.1em; }
-        
         #current-code { font-family: monospace; font-size: 13px; background: #333; color: #fff; padding: 10px; border-radius: 8px; word-break: break-all; text-align: center; margin: 12px 0; max-height: 60px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         
-        /* Timer & Interval */
-        .interval-selector { 
-            display: flex; align-items: center; justify-content: center; gap: 8px; 
-            margin: 15px auto; 
-            flex-wrap: wrap; background: #fff; padding: 8px; border-radius: 14px; 
-            border: 1px solid var(--border); 
-            max-width: 100%; 
-        }
-        .interval-btn, .wc-interval-btn { padding: 8px 14px; border: 1px solid transparent; background: transparent; border-radius: 10px; font-size: 0.9em; cursor: pointer; color: var(--gray); font-weight: 500; min-width: 44px; /* touch target */ }
+        .interval-selector { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 15px auto; flex-wrap: wrap; background: #fff; padding: 8px; border-radius: 14px; border: 1px solid var(--border); max-width: 100%; }
+        .interval-btn, .wc-interval-btn { padding: 8px 14px; border: 1px solid transparent; background: transparent; border-radius: 10px; font-size: 0.9em; cursor: pointer; color: var(--gray); font-weight: 500; min-width: 44px; }
         .interval-btn.active, .wc-interval-btn.active { background: #dcfce7; color: #166534; font-weight: 700; }
-        .custom-interval-input { 
-            width: 60px; 
-            padding: 4px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9em; text-align: center; height: 36px; 
-        }
+        .custom-interval-input { width: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9em; text-align: center; height: 36px; }
 
-        /* Library & Lists */
         .hint { font-size: 0.8em; color: #6b7280; margin-bottom: 10px; margin-top: 4px; }
         .error-text { color: var(--danger); font-size: 0.8em; margin-top: 4px; }
-        
         .template-selector { margin: 15px 0; }
         .template-btns { display: flex; gap: 10px; }
         .tmpl-btn { flex: 1; padding: 12px; border: 2px solid var(--border); background: white; border-radius: 12px; cursor: pointer; font-size: 0.8em; text-align: center; transition: all 0.2s; }
         .tmpl-btn.active { border-color: var(--success); background: #f0fdf4; color: #166534; }
         .tmpl-btn .tmpl-name { font-weight: 700; display: block; margin-bottom: 4px; font-size: 1.1em; }
-        
         .bulk-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; padding: 12px; background: #fffbeb; border-radius: 12px; border: 1px solid #fcd34d; }
         .rotation-controls { background: var(--light); border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center; }
         .rotation-controls.active { background: #dcfce7; border: 1px solid #86efac; }
-        
         .saved-list h3 { font-size: 1em; color: #333; margin: 20px 0 10px 0; display: flex; align-items: center; justify-content: space-between; }
         #saved-list { max-height: 35vh; overflow-y: auto; padding: 5px; border: 1px solid var(--border); border-radius: 12px; background: #fff; -webkit-overflow-scrolling: touch; }
         
-        /* List Items */
-        .saved-item, .weight-item { 
-            background: #f9fafb; border-radius: 10px; padding: 12px; margin-bottom: 8px; 
-            display: flex; align-items: center; gap: 10px; border: 1px solid transparent; transition: all 0.1s; 
-        }
+        .saved-item, .weight-item { background: #f9fafb; border-radius: 10px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; border: 1px solid transparent; transition: all 0.1s; }
         .saved-item.active, .weight-item.active { background: #f0fdf4; border-color: #4ade80; }
         .saved-item .info, .weight-item .info { flex: 1; min-width: 0; }
         .saved-item .barcode, .weight-item .code { font-weight: 700; font-size: 1em; color: #1f2937; font-family: monospace; letter-spacing: 0.5px; }
-        
-        .saved-item .actions, .weight-item .actions {
-            display: flex;
-            gap: 12px;
-        }
+        .saved-item .actions, .weight-item .actions { display: flex; gap: 12px; }
 
-        /* Barcode Result */
         .barcode-result { background: var(--light); border-radius: 16px; padding: 25px; margin-top: 15px; text-align: center; }
         .barcode-result .result-text { font-family: monospace; font-size: 1.2em; background: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; word-break: break-all; border: 1px dashed #d1d5db; }
-        .barcode-result svg { max-width: 100%; height: auto; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
+        /* --- FIX FOR OVERFLOWING BARCODE --- */
+        .barcode-result svg, 
+        .barcode-carousel-display svg, 
+        #sgCarouselSvg,
+        #sgSvg { 
+            max-width: 100%; 
+            height: auto; 
+            display: block; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 10px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+        }
+
         .checkbox-row { display: flex; align-items: center; gap: 10px; font-size: 0.95em; margin: 15px 0; cursor: pointer; padding: 5px 0; }
         .checkbox-row input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary); }
         
-        /* --- CONSTRUCTOR (SIMPLE GEN) STYLES --- */
         .simple-preview { min-height: 140px; display: flex; align-items: center; justify-content: center; background: white; border: 2px dashed #d1d5db; border-radius: 12px; margin-top: 15px; padding: 15px; position: relative; }
         .sg-save-panel { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px; margin-top: 15px; }
         .sg-folders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -271,7 +158,6 @@
         .sg-folder-row { display: flex; align-items: center; padding: 12px; background: white; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: transform 0.1s; }
         .sg-folder-row:active { transform: scale(0.98); background: #fafafa; }
         
-        /* Carousel */
         .sg-carousel { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 2px solid var(--primary); border-radius: 16px; padding: 15px; margin-top: 15px; gap: 5px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); }
         .sg-arrow-btn { background: var(--light); border: 1px solid var(--border); border-radius: 50%; width: 48px; height: 48px; font-size: 1.4em; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--primary); flex-shrink: 0; user-select: none; transition: background 0.2s; -webkit-tap-highlight-color: rgba(0,0,0,0); }
         .sg-arrow-btn:active { background: #dbeafe; }
@@ -280,30 +166,25 @@
         .sg-item-counter { font-size: 0.85em; color: #888; margin-top: 8px; font-weight: 500; }
         .sg-back-btn { margin-bottom: 15px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--primary); font-size: 1em; font-weight: 600; padding: 10px; }
 
-        /* Weight Carousel Extra Styles */
         .weight-divider { margin: 25px 0; border: 0; border-top: 1px solid #e5e7eb; }
         .weight-mode-switch { display: flex; gap: 10px; background: transparent; margin-bottom: 15px; }
         .weight-mode-label { flex: 1; text-align: center; padding: 14px; font-size: 0.9em; font-weight: 600; cursor: pointer; border-radius: 12px; color: #555; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; background: #e5e7eb; border: 2px solid transparent; }
         .weight-mode-switch input[type="radio"] { display: none; }
         .weight-mode-switch input[type="radio"]:checked + .weight-mode-label { background: white; color: var(--purple); border-color: var(--purple); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2); transform: translateY(-1px); }
-        
         .weight-range-row { display: flex; gap: 10px; align-items: center; }
         .weight-range-row input { flex: 1; }
-        
         .prefix-checkboxes { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
         .prefix-checkbox { flex: 1; display: flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--border); background: white; border-radius: 12px; cursor: pointer; transition: all 0.2s; min-width: 100px; }
         .prefix-checkbox:has(input:checked) { border-color: var(--purple); background: #f3e8ff; }
-        
         .discount-section { background: #fdf4ff; border: 1px dashed var(--purple); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
         
         .folder-list { max-height: 200px; overflow-y: auto; margin-bottom: 12px; padding-right: 2px; -webkit-overflow-scrolling: touch; }
         .folder-item { background: white; border-radius: 10px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
         .folder-item.selected { border-color: var(--purple); background: #f3e8ff; }
-        
         .weight-items-list { max-height: 250px; overflow-y: auto; margin: 10px 0; border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 5px; -webkit-overflow-scrolling: touch; }
         
         .current-folder-badge { display: inline-block; background: var(--purple); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; margin-left: 8px; font-weight: 600; }
-        .barcode-carousel-display { background: white; border-radius: 20px; padding: 25px; margin: 20px 0; text-align: center; border: 2px solid var(--purple); transition: opacity 0.1s; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.15); }
+        .barcode-carousel-display { background: white; border-radius: 20px; padding: 25px; margin: 20px 0; text-align: center; border: 2px solid var(--purple); transition: opacity 0.1s; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.15); overflow: hidden; /* Prevent overflow */ }
 
         .backup-section { background: #f3f4f6; border: 1px dashed #9ca3af; border-radius: 12px; padding: 15px; margin-top: 25px; text-align: center; }
         .backup-title { font-size: 0.9em; font-weight: 700; color: #4b5563; margin-bottom: 10px; }
