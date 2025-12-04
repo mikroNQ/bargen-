@@ -56,7 +56,29 @@
             padding: 20px; margin-bottom: 15px; 
         }
         
-        h1 { color: #333; font-size: 1.4em; margin: 0 0 20px 0; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
+        /* --- HEADER WITH LOGO --- */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; /* Расстояние между лого и текстом */
+            margin-bottom: 20px;
+        }
+        
+        .app-logo {
+            width: 32px; /* Размер логотипа */
+            height: 32px;
+            object-fit: contain;
+        }
+
+        h1 { 
+            color: #333; 
+            font-size: 1.4em; 
+            margin: 0; 
+            font-weight: 800; 
+            letter-spacing: -0.5px; 
+            line-height: 1;
+        }
         
         /* --- TABS --- */
         .tabs { display: flex; flex-wrap: wrap; background: var(--light); border-radius: 14px; padding: 4px; margin-bottom: 20px; gap: 4px; }
@@ -133,7 +155,7 @@
         .barcode-result { background: var(--light); border-radius: 16px; padding: 25px; margin-top: 15px; text-align: center; }
         .barcode-result .result-text { font-family: monospace; font-size: 1.2em; background: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; word-break: break-all; border: 1px dashed #d1d5db; }
         
-        /* --- FIX FOR OVERFLOWING BARCODE --- */
+        /* FIX OVERFLOWING BARCODE */
         .barcode-result svg, 
         .barcode-carousel-display svg, 
         #sgCarouselSvg,
@@ -184,7 +206,7 @@
         .weight-items-list { max-height: 250px; overflow-y: auto; margin: 10px 0; border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 5px; -webkit-overflow-scrolling: touch; }
         
         .current-folder-badge { display: inline-block; background: var(--purple); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; margin-left: 8px; font-weight: 600; }
-        .barcode-carousel-display { background: white; border-radius: 20px; padding: 25px; margin: 20px 0; text-align: center; border: 2px solid var(--purple); transition: opacity 0.1s; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.15); overflow: hidden; /* Prevent overflow */ }
+        .barcode-carousel-display { background: white; border-radius: 20px; padding: 25px; margin: 20px 0; text-align: center; border: 2px solid var(--purple); transition: opacity 0.1s; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.15); overflow: hidden; }
 
         .backup-section { background: #f3f4f6; border: 1px dashed #9ca3af; border-radius: 12px; padding: 15px; margin-top: 25px; text-align: center; }
         .backup-title { font-size: 0.9em; font-weight: 700; color: #4b5563; margin-bottom: 10px; }
@@ -200,13 +222,16 @@
 <body>
     <div class="container">
         <div class="card">
-            <h1>📊 Generator ET</h1>
+            <div class="app-header">
+                <img src="logo.png" alt="Logo" class="app-logo" onerror="this.style.display='none'">
+                <h1>Generator ET</h1>
+            </div>
             
             <div class="tabs">
                 <button class="tab-btn active" data-tab="datamatrix">📱 DM</button>
                 <button class="tab-btn" data-tab="library">📚 Библ.</button>
                 <button class="tab-btn" data-tab="barcode">🏷️ Вес</button>
-                <button class="tab-btn" data-tab="simplegen">🛠️ Simple</button>
+                <button class="tab-btn" data-tab="simplegen">🛠️ Конструктор</button>
                 <button class="tab-btn" data-tab="weightcarousel">⚖️ Карусель</button>
             </div>
             
