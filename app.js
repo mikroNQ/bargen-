@@ -63,7 +63,14 @@ var Utils = {
     calcControlCore: function(code) { var sum = 0, d = code.split('').filter(function(c) { return /\d/.test(c); }); for (var i = 0; i < d.length; i++) sum += parseInt(d[i]); return sum % 10; },
     calcControlEAN13: function(code) { var d = code.split('').map(function(c) { return parseInt(c) || 0; }), sum = 0; for (var i = 0; i < d.length; i++) sum += d[i] * (i % 2 ? 3 : 1); return (10 - (sum % 10)) % 10; },
     randomWeight: function(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; },
-    escapeHtml: function(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+    escapeHtml: function(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; },
+    scrollToElement: function(el, offset) {
+        if (!el) return;
+        var rect = el.getBoundingClientRect();
+        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var targetY = rect.top + scrollTop - (offset || 20);
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+    }
 };
 
 var Generators = {
@@ -190,11 +197,9 @@ var UI = {
         if (!c || !cfg) return;
         c.innerHTML = cfg.fields.map(function(f) { return '<div class="form-group"><label>' + f.label + '</label><input type="text" id="' + f.name + '" placeholder="до ' + f.length + '"><div class="hint" id="' + f.name + '-error" style="color:#ef4444"></div></div>'; }).join('');
     },
-    // FIX: Обновленная функция рендера истории
     renderHistory: function() {
         var c = document.getElementById('historyList'); 
         if (!c) return;
-        
         if (AppState.history.items.length === 0) { 
             c.innerHTML = '<div class="empty-state">История пуста</div>'; 
         } else {
@@ -203,14 +208,9 @@ var UI = {
                 var d = document.createElement('div'); 
                 d.className = 'history-item';
                 var time = new Date(item.timestamp).toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
-                
-                d.innerHTML = '<span class="history-time">' + time + '</span>' +
-                              '<span class="history-type">' + (item.type || '?') + '</span>' +
-                              '<span class="history-code">' + Utils.escapeHtml(item.code || '-') + '</span>';
-                
+                d.innerHTML = '<span class="history-time">' + time + '</span><span class="history-type">' + (item.type || '?') + '</span><span class="history-code">' + Utils.escapeHtml(item.code || '-') + '</span>';
                 d.onclick = function() { 
                     if (navigator.clipboard) navigator.clipboard.writeText(item.code);
-
                     if (item.type === 'DM') {
                         Controllers.Tab.switchTo('datamatrix');
                         Controllers.DM.stopTimer(); 
@@ -218,19 +218,16 @@ var UI = {
                         var codeEl = document.getElementById('current-code');
                         if(codeEl) codeEl.textContent = item.code;
                         Controllers.DM.hideCodeInfo();
-                    } 
-                    else if (item.type === 'BC' || item.type === 'WC') {
+                    } else if (item.type === 'BC' || item.type === 'WC') {
                         Controllers.Tab.switchTo('barcode');
                         document.getElementById('barcodeResult').style.display = 'block';
                         document.getElementById('barcodeText').textContent = item.code;
                         Generators.renderBarcode(document.getElementById('barcodeSvg'), item.code, 'CODE128');
                     }
                 };
-                
                 f.appendChild(d);
             });
-            c.innerHTML = ''; 
-            c.appendChild(f);
+            c.innerHTML = ''; c.appendChild(f);
         }
     }
 };
@@ -262,16 +259,10 @@ var Controllers = {
             document.getElementById('start-btn').style.display = 'none'; document.getElementById('stop-btn').style.display = 'inline-flex';
             UI.updateRotationStatus(); this.generateAndDisplay(); this.startTimer();
         },
-        // FIX: Функция остановки ротации с принудительной остановкой таймера
         stopRotation: function() {
-            AppState.dm.isRotating = false; 
-            AppState.dm.rotationList = [];
-            this.stopTimer(); // <-- Важное исправление
-            document.getElementById('start-btn').style.display = 'inline-flex'; 
-            document.getElementById('stop-btn').style.display = 'none';
-            UI.updateRotationStatus(); 
-            this.hideCodeInfo(); 
-            this.updateBadge(false);
+            AppState.dm.isRotating = false; AppState.dm.rotationList = []; this.stopTimer();
+            document.getElementById('start-btn').style.display = 'inline-flex'; document.getElementById('stop-btn').style.display = 'none';
+            UI.updateRotationStatus(); this.hideCodeInfo(); this.updateBadge(false);
         },
         manualNext: function() { this.generateAndDisplay(); },
         manualPrev: function() { if (AppState.dm.isRotating && AppState.dm.rotationList.length > 0) { var l = AppState.dm.rotationList.length; AppState.dm.rotationIndex = (AppState.dm.rotationIndex - 2 + l) % l; } this.generateAndDisplay(); },
@@ -317,9 +308,9 @@ var Controllers = {
             AppState.wc.rotationItems = active; AppState.wc.rotationIndex = 0; AppState.wc.isRotating = true;
             document.getElementById('wc-start-btn').style.display = 'none'; document.getElementById('wc-stop-btn').style.display = 'inline-flex';
             document.getElementById('wcCarouselDisplay').style.display = 'block'; UI.updateWcStatus(); this.displayBarcode(); this.startTimer();
+            setTimeout(function() { Utils.scrollToElement(document.getElementById('wcCarouselDisplay'), 100); }, 100);
         },
         stopRotation: function() { AppState.wc.isRotating = false; this.stopTimer(); document.getElementById('wc-start-btn').style.display = 'inline-flex'; document.getElementById('wc-stop-btn').style.display = 'none'; document.getElementById('wcCarouselDisplay').style.display = 'none'; UI.updateWcStatus(); },
-        // FIX: Обновленная функция с эффектом вспышки
         displayBarcode: function() {
             var items = AppState.wc.rotationItems; if (items.length === 0) return;
             var item = items[AppState.wc.rotationIndex % items.length];
@@ -329,14 +320,8 @@ var Controllers = {
             document.getElementById('wcCarouselCounter').textContent = ((AppState.wc.rotationIndex % items.length) + 1) + '/' + items.length;
             Generators.renderBarcode(document.getElementById('wcBarcodeSvg'), item.code, item.format);
             AppState.wc.rotationIndex++; AppState.addToHistory({ type: 'WC', code: item.code });
-            
-            // Вспышка
             var container = document.getElementById('wcCarouselDisplay');
-            if (container) {
-                container.classList.remove('flash');
-                void container.offsetWidth; 
-                container.classList.add('flash');
-            }
+            if (container) { container.classList.remove('flash'); void container.offsetWidth; container.classList.add('flash'); }
         },
         startTimer: function() { var self = this; this.stopTimer(); AppState.wc.remaining = AppState.wc.timerValue; AppState.wc.timerInterval = setInterval(function() { AppState.wc.remaining -= 0.1; if (AppState.wc.remaining <= 0.05) { self.displayBarcode(); AppState.wc.remaining = AppState.wc.timerValue; } }, 100); },
         stopTimer: function() { if (AppState.wc.timerInterval) { clearInterval(AppState.wc.timerInterval); AppState.wc.timerInterval = null; } },
