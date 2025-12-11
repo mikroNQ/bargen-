@@ -6,144 +6,248 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Generator ET</title>
     <style>
-        :root{--primary:#3b82f6;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--gray:#6b7280;--light:#f3f4f6;--border:#d1d5db;--purple:#8b5cf6;--dark:#1f2937}
+        :root{
+            --primary:#10b981;
+            --primary-dark:#059669;
+            --success:#10b981;
+            --warning:#f59e0b;
+            --danger:#ef4444;
+            --gray:#9ca3af;
+            --light:rgba(255,255,255,0.1);
+            --border:rgba(255,255,255,0.2);
+            --purple:#8b5cf6;
+            --dark:#1f2937;
+            --glass-bg:rgba(255,255,255,0.08);
+            --glass-border:rgba(255,255,255,0.15);
+            --text-light:#fff;
+            --text-muted:rgba(255,255,255,0.85);
+            --text-secondary:#d1d5db
+        }
         *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-        body{margin:0;padding:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#f5f5f5,#e8e0d5);min-height:100vh;font-size:14px}
+        body{margin:0;padding:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(160deg,#166563 0%,#134e4c 30%,#0f3d3b 60%,#0a2a29 100%);min-height:100vh;font-size:14px}
         .container{max-width:550px;margin:0 auto}
-        .card{background:#fff;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:20px;margin-bottom:15px}
-        .app-header{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px}
-        .app-logo{width:36px;height:36px;object-fit:contain}
-        h1{color:#333;font-size:1.4em;margin:0;font-weight:800}
+        .card{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:30px;border:1px solid var(--glass-border);box-shadow:0 8px 32px rgba(0,0,0,0.3);padding:25px;margin-bottom:15px}
+        .app-header{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px}
+        .app-logo{width:40px;height:40px;object-fit:contain;border-radius:10px}
+        h1{color:var(--text-light);font-size:1.5em;margin:0;font-weight:700}
         .version-badge{font-size:.5em;background:var(--primary);color:#fff;padding:2px 6px;border-radius:8px;margin-left:8px;vertical-align:middle}
-        .tabs{display:flex;flex-wrap:wrap;background:var(--light);border-radius:14px;padding:4px;margin-bottom:20px;gap:4px}
-        .tab-btn{flex:1;padding:10px 8px;border:none;background:transparent;cursor:pointer;font-size:.85em;font-weight:500;color:var(--gray);border-radius:10px;white-space:nowrap}
-        .tab-btn.active{background:#fff;color:#333;box-shadow:0 2px 8px rgba(0,0,0,.08);font-weight:600}
+        .tabs{display:flex;flex-wrap:wrap;background:rgba(255,255,255,0.05);border-radius:16px;padding:5px;margin-bottom:20px;gap:4px;border:1px solid rgba(255,255,255,0.1)}
+        .tab-btn{flex:1 1 auto;padding:10px 6px;border:none;background:transparent;cursor:pointer;font-size:.75em;font-weight:500;color:var(--text-muted);border-radius:12px;white-space:nowrap;transition:all .2s;min-width:0}
+        .tab-btn.active{background:var(--primary);color:#fff;font-weight:600;box-shadow:0 4px 15px rgba(16,185,129,0.3)}
+        @media(max-width:400px){.tab-btn{font-size:.65em;padding:8px 4px}}
         .tab-content{display:none}
         .tab-content.active{display:block}
         .form-group{margin-bottom:15px}
-        .form-group label{display:block;font-size:.9em;font-weight:600;color:#4b5563;margin-bottom:8px}
-        input[type=text],input[type=number],select,textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:16px;background:#fff}
-        input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+        .form-group label{display:block;font-size:.9em;font-weight:600;color:var(--text-light);margin-bottom:8px}
+        /* Все labels белые + отступы */
+        label{color:var(--text-light);display:block;margin-bottom:8px}
+        .add-form>label,.template-selector>label,.barcode-form>label,.weight-carousel-form>label,.simple-gen-form>label{margin-bottom:10px}
+        .checkbox-row label,.prefix-checkbox label,.weight-mode-label{display:inline;margin-bottom:0}
+        input[type=text],input[type=number],select,textarea{width:100%;padding:12px;border:1px solid var(--glass-border);border-radius:12px;font-size:16px;background:rgba(255,255,255,0.1);color:var(--text-light)}
+        input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.4)}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(16,185,129,0.2);background:rgba(255,255,255,0.15)}
+        select{color:var(--text-light)}
+        select option{background:#1a3a38;color:#fff}
         textarea{font-family:monospace;min-height:80px;resize:vertical}
-        .btn{border:none;border-radius:20px;padding:12px 24px;font-size:.95em;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-        .btn:active{transform:scale(.96);opacity:.9}
-        .btn-primary{background:linear-gradient(145deg,var(--primary),#2563eb);color:#fff}
-        .btn-success{background:linear-gradient(145deg,var(--success),#059669);color:#fff}
-        .btn-warning{background:linear-gradient(145deg,var(--warning),#d97706);color:#fff}
-        .btn-danger{background:var(--danger);color:#fff}
-        .btn-purple{background:linear-gradient(145deg,var(--purple),#7c3aed);color:#fff}
-        .btn-dark{background:var(--dark);color:#fff}
-        .btn-outline{background:#fff;border:2px solid #e5e7eb;color:var(--gray)}
-        .btn-secondary{background:var(--gray);color:#fff}
-        .btn-sm{padding:8px 14px;font-size:.85em;border-radius:14px}
         
-        .dm-play-controls .btn { min-width: 90px; }
-        #start-btn, #stop-btn { min-width: 120px; }
+        /* Кнопки glassmorphism */
+        .btn{
+            border:none;
+            border-radius:50px;
+            padding:12px 24px;
+            font-size:.95em;
+            font-weight:600;
+            cursor:pointer;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            transition:all .2s;
+            position:relative;
+            user-select:none;
+        }
+        .btn:active{
+            opacity:.9;
+            transform:scale(0.98);
+        }
+        .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 15px rgba(16,185,129,0.3)}
+        .btn-success{background:var(--primary);color:#fff;box-shadow:0 4px 15px rgba(16,185,129,0.3)}
+        .btn-warning{background:rgba(255,255,255,0.1);border:1px solid var(--glass-border);color:var(--text-light)}
+        .btn-danger{background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3);color:#fca5a5}
+        .btn-purple{background:linear-gradient(145deg,var(--purple),#7c3aed);color:#fff;box-shadow:0 4px 15px rgba(139,92,246,0.3)}
+        .btn-dark{background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);color:var(--text-light)}
+        .btn-outline{background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-muted)}
+        .btn-outline:hover{background:rgba(255,255,255,0.1)}
+        .btn-secondary{background:rgba(255,255,255,0.1);border:1px solid var(--glass-border);color:var(--text-light)}
+        .btn-sm{padding:8px 14px;font-size:.85em;border-radius:20px}
+        
+        /* FIX: Фиксированные размеры для важных кнопок */
+        .dm-play-controls .btn{min-width:90px;height:40px}
+        #start-btn,#stop-btn{min-width:120px;height:40px}
+        #wc-start-btn,#wc-stop-btn{min-width:100px;height:38px}
 
-        .add-form,.barcode-form,.weight-carousel-form,.simple-gen-form{background:var(--light);border-radius:16px;padding:18px;margin-bottom:15px}
-        #code-container{background:var(--light);border-radius:12px;padding:15px;text-align:center;border:1px dashed var(--border);max-width:250px;margin:0 auto}
-        #datamatrix-container{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:12px}
+        .add-form,.barcode-form,.weight-carousel-form,.simple-gen-form{background:rgba(255,255,255,0.05);border-radius:20px;padding:18px;margin-bottom:15px;border:1px solid var(--glass-border)}
+        #code-container{background:#fff;border-radius:20px;padding:20px;text-align:center;max-width:220px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+        #datamatrix-container{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:16px}
         #datamatrix-container canvas{width:90%!important;height:90%!important;object-fit:contain}
         .mode-badge{display:inline-block;padding:6px 12px;border-radius:12px;font-size:.75em;font-weight:600;margin-bottom:12px}
         .mode-badge.default{display:none}
-        .mode-badge.list{background:#fef3c7;color:#92400e}
-        .code-info{background:#e0f2fe;border-radius:10px;padding:12px;margin:12px 0;font-size:.85em}
-        .code-info .label{color:#0369a1;font-weight:500}
-        .code-info .value{font-family:monospace;color:#0c4a6e;font-weight:700}
-        #current-code{font-family:monospace;font-size:12px;background:#333;color:#fff;padding:10px;border-radius:8px;word-break:break-all;text-align:center;margin:12px 0;max-height:60px;overflow-y:auto}
+        .mode-badge.list{background:rgba(16,185,129,0.2);color:#6ee7b7}
+        .code-info{background:rgba(16,185,129,0.1);border-radius:12px;padding:12px;margin:12px 0;font-size:.85em;border:1px solid rgba(16,185,129,0.2)}
+        .code-info .label{color:var(--text-muted);font-weight:500}
+        .code-info .value{font-family:monospace;color:var(--text-light);font-weight:700}
+        #current-code{font-family:monospace;font-size:11px;background:rgba(0,0,0,0.4);color:var(--text-light);padding:12px 16px;border-radius:50px;word-break:break-all;text-align:center;margin:15px auto;max-height:60px;overflow-y:auto;max-width:90%}
         .dm-visual-row{display:flex;align-items:center;justify-content:center;gap:15px;margin:15px 0}
         
         .dm-nav-arrow{
-            background: transparent;
-            border: none;
-            width: 44px;
-            height: 44px;
-            font-size: 1.5em;
-            color: var(--primary);
-            cursor: pointer;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            line-height: 1;
-            padding-bottom: 3px;
+            background:rgba(255,255,255,0.1);
+            border:1px solid var(--glass-border);
+            width:44px;
+            height:44px;
+            font-size:1.5em;
+            color:var(--primary);
+            cursor:pointer;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:0;
+            line-height:1;
+            padding-bottom:3px;
+            transition:all .2s;
         }
-        .dm-nav-arrow:active{background:#d1d5db}
-        
+        .dm-nav-arrow:active{background:rgba(255,255,255,0.2)}
+
         .dm-carousel-controls{margin-top:15px;text-align:center}
-        .dm-play-controls{display:flex;gap:8px;justify-content:center;margin-top:10px}
-        .interval-selector{display:flex;align-items:center;justify-content:center;gap:8px;margin:15px auto;flex-wrap:wrap;background:#fff;padding:8px;border-radius:14px;border:1px solid var(--border)}
-        .interval-btn,.wc-interval-btn{padding:8px 14px;border:none;background:transparent;border-radius:10px;font-size:.9em;cursor:pointer;color:var(--gray);font-weight:500}
-        .interval-btn.active,.wc-interval-btn.active{background:#dcfce7;color:#166534;font-weight:700}
-        
+        .dm-play-controls{display:flex;gap:10px;justify-content:center;margin-top:12px}
+        .interval-selector{display:flex;align-items:center;justify-content:center;gap:6px;margin:15px auto;flex-wrap:wrap;background:rgba(255,255,255,0.05);padding:8px;border-radius:50px;border:1px solid var(--glass-border)}
+
+        /* Кнопки интервала glassmorphism */
+        .interval-btn,.wc-interval-btn{
+            padding:8px 14px;
+            border:none;
+            background:transparent;
+            border-radius:50px;
+            font-size:.9em;
+            cursor:pointer;
+            color:var(--text-muted);
+            font-weight:500;
+            min-width:45px;
+            height:36px;
+            transition:all .2s;
+        }
+        .interval-btn.active,.wc-interval-btn.active{background:var(--primary);color:#fff;font-weight:600;box-shadow:0 2px 10px rgba(16,185,129,0.3)}
+
         .custom-interval-input{
-            width: 85px !important;
-            padding: 4px 2px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: .9em;
-            text-align: center;
-            height: 36px;
-            flex: 0 0 auto;
+            width:70px!important;
+            padding:4px 8px;
+            border:1px solid var(--glass-border);
+            border-radius:50px;
+            font-size:.9em;
+            text-align:center;
+            height:36px;
+            flex:0 0 auto;
+            background:rgba(255,255,255,0.1);
+            color:var(--text-light);
         }
 
-        .hint{font-size:.8em;color:#6b7280;margin-top:4px}
-        .empty-state{text-align:center;padding:20px;color:#9ca3af}
+        .hint{font-size:.8em;color:var(--text-secondary);margin-top:4px}
+        .empty-state{text-align:center;padding:20px;color:var(--text-muted)}
         .template-selector{margin:15px 0}
         .template-btns{display:flex;gap:10px}
-        .tmpl-btn{flex:1;padding:12px;border:2px solid var(--border);background:#fff;border-radius:12px;cursor:pointer;text-align:center}
-        .tmpl-btn.active{border-color:var(--success);background:#f0fdf4}
-        .tmpl-btn .tmpl-name{font-weight:700;display:block;margin-bottom:4px}
-        .bulk-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:12px;background:#fffbeb;border-radius:12px;border:1px solid #fcd34d}
-        .rotation-controls{background:var(--light);border-radius:12px;padding:15px;margin:15px 0;text-align:center}
-        .rotation-controls.active{background:#dcfce7;border:1px solid #86efac}
-        .saved-list h3{font-size:1em;margin:20px 0 10px;display:flex;justify-content:space-between;align-items:center}
-        #saved-list,.weight-items-list{max-height:35vh;overflow-y:auto;padding:5px;border:1px solid var(--border);border-radius:12px;background:#fff}
-        .saved-item,.weight-item{background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border:1px solid transparent}
-        .saved-item.active,.weight-item.active{background:#f0fdf4;border-color:#4ade80}
-        .saved-item .info,.weight-item .info{flex:1;min-width:0}
-        .saved-item .barcode,.weight-item .code{font-weight:700;font-family:monospace}
-        .barcode-result{background:var(--light);border-radius:16px;padding:25px;margin-top:15px;text-align:center}
-        .barcode-result .result-text{font-family:monospace;font-size:1.2em;background:#fff;padding:12px;border-radius:8px;margin-bottom:15px;border:1px dashed #d1d5db}
-        .barcode-result svg{max-width:100%;height:auto;display:block;margin:0 auto;background:#fff;padding:10px;border-radius:8px}
-        .checkbox-row{display:flex;align-items:center;gap:10px;margin:15px 0;cursor:pointer}
+        .tmpl-btn{flex:1;padding:12px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);border-radius:12px;cursor:pointer;text-align:center;transition:all .2s;color:var(--text-muted)}
+        .tmpl-btn.active{border-color:var(--primary);background:rgba(16,185,129,0.15);color:var(--text-light)}
+        .tmpl-btn .tmpl-name{font-weight:700;display:block;margin-bottom:4px;color:var(--text-light)}
+        .bulk-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:12px;background:rgba(16,185,129,0.1);border-radius:16px;border:1px solid rgba(16,185,129,0.2)}
+        .rotation-controls{background:rgba(255,255,255,0.05);border-radius:16px;padding:15px;margin:15px 0;text-align:center;border:1px solid var(--glass-border)}
+        .rotation-controls.active{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3)}
+        .saved-list h3{font-size:1em;margin:20px 0 10px;display:flex;justify-content:space-between;align-items:center;color:var(--text-light)}
+        #saved-list,.weight-items-list{max-height:35vh;overflow-y:auto;padding:8px;border:1px solid var(--glass-border);border-radius:16px;background:rgba(255,255,255,0.03)}
+        .saved-item,.weight-item{background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border:1px solid transparent;transition:all .2s}
+        .saved-item.active,.weight-item.active{background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.3)}
+        .saved-item .info,.weight-item .info{flex:1;min-width:0;color:var(--text-light)}
+        .saved-item .barcode,.weight-item .code{font-weight:700;font-family:monospace;color:var(--text-light)}
+        .barcode-result{background:rgba(255,255,255,0.05);border-radius:20px;padding:25px;margin-top:15px;text-align:center;border:1px solid var(--glass-border)}
+        .barcode-result .result-text{font-family:monospace;font-size:1.2em;background:rgba(0,0,0,0.3);color:var(--text-light);padding:12px;border-radius:50px;margin-bottom:15px}
+        .barcode-result svg{max-width:100%;height:auto;display:block;margin:0 auto;background:#fff;padding:10px;border-radius:12px}
+        .checkbox-row{display:flex;align-items:center;gap:10px;margin:15px 0;cursor:pointer;color:var(--text-muted)}
         .checkbox-row input[type=checkbox]{width:22px;height:22px;accent-color:var(--primary)}
-        .simple-preview{min-height:140px;display:flex;align-items:center;justify-content:center;background:#fff;border:2px dashed #d1d5db;border-radius:12px;margin-top:15px;padding:15px;position:relative;overflow:hidden}
+        .simple-preview{min-height:140px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:16px;margin-top:15px;padding:15px;position:relative;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.2)}
         .simple-preview svg{max-width:100%;height:auto}
-        .sg-save-panel{background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:18px;margin-top:15px}
-        .folders-section{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:15px;margin-bottom:15px}
-        .sg-folder-row{display:flex;align-items:center;padding:12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;cursor:pointer}
-        .sg-folder-row:active{transform:scale(.98)}
+        .sg-save-panel{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:18px;margin-top:15px}
+        .sg-save-panel label{color:var(--primary)!important}
+        .folders-section{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:15px;margin-bottom:15px}
+        .folders-section h4{color:var(--text-light);margin:0 0 12px}
+        .sg-folder-row{display:flex;align-items:center;padding:12px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;color:var(--text-light)}
+        .sg-folder-row:active{transform:scale(.98);background:rgba(255,255,255,0.1)}
+        .sg-folder-row span,.sg-folder-row div,.sg-folder-row *{color:var(--text-light)!important}
+        #sgFoldersList{color:var(--text-light)}
+        #sgFoldersList *{color:var(--text-light)!important}
         
-        /* FIX: Карусель со стрелками ПОД баркодом */
-        .sg-carousel{background:#fff;border:2px solid var(--primary);border-radius:16px;padding:15px;margin-top:15px}
+        /* Карусель SimpleGen glassmorphism */
+        .sg-carousel{background:#fff;border:2px solid var(--primary);border-radius:20px;padding:20px;margin-top:15px;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
         .sg-carousel-nav{display:flex;justify-content:center;gap:20px;margin-top:12px}
-        .sg-arrow-btn{background:var(--light);border:1px solid var(--border);border-radius:50%;width:48px;height:48px;font-size:1.4em;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--primary);flex-shrink:0}
-        .sg-arrow-btn:active{background:#d1d5db}
-        .sg-display-area{text-align:center;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
-        .sg-display-area svg{max-width:100%;height:auto;display:block}
+        .sg-arrow-btn{
+            background:rgba(16,185,129,0.1);
+            border:1px solid rgba(16,185,129,0.3);
+            border-radius:50%;
+            width:48px;
+            height:48px;
+            font-size:1.4em;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            color:var(--primary);
+            flex-shrink:0;
+            transition:all .2s;
+        }
+        .sg-arrow-btn:active{background:rgba(16,185,129,0.2)}
+        
+        /* Фиксированная высота области отображения */
+        .sg-display-area{
+            text-align:center;
+            min-height:180px;
+            height:180px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+        }
+        .sg-display-area svg{
+            max-width:100%;
+            max-height:120px;
+            height:120px;
+            width:auto;
+            display:block;
+        }
         .sg-item-name{font-weight:700;color:#333;margin-bottom:8px;font-size:1.2em;word-break:break-word}
         .sg-item-counter{font-size:.85em;color:#888;margin-top:8px}
-        
+
         .sg-back-btn{margin-bottom:15px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--primary);font-weight:600;padding:10px}
-        .weight-divider{margin:25px 0;border:0;border-top:1px solid #e5e7eb}
+        .weight-divider{margin:25px 0;border:0;border-top:1px solid var(--glass-border)}
         .weight-mode-switch{display:flex;gap:10px;margin-bottom:15px}
-        .weight-mode-label{flex:1;text-align:center;padding:14px;font-size:.9em;font-weight:600;cursor:pointer;border-radius:12px;color:#555;background:#e5e7eb;border:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:6px}
+        .weight-mode-label{flex:1;text-align:center;padding:14px;font-size:.9em;font-weight:600;cursor:pointer;border-radius:12px;color:var(--text-muted);background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
         .weight-mode-switch input[type=radio]{display:none}
-        .weight-mode-switch input[type=radio]:checked+.weight-mode-label{background:#fff;color:var(--purple);border-color:var(--purple)}
-        .weight-range-row{display:flex;gap:10px;align-items:center}
+        .weight-mode-switch input[type=radio]:checked+.weight-mode-label{background:rgba(139,92,246,0.2);color:#c4b5fd;border-color:rgba(139,92,246,0.4)}
+        .weight-range-row{display:flex;gap:10px;align-items:center;color:var(--text-muted)}
         .weight-range-row input{flex:1}
         .prefix-checkboxes{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap}
-        .prefix-checkbox{flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:1px solid var(--border);background:#fff;border-radius:12px;cursor:pointer;min-width:90px}
-        .prefix-checkbox:has(input:checked){border-color:var(--purple);background:#f3e8ff}
-        .discount-section{background:#fdf4ff;border:1px dashed var(--purple);padding:15px;border-radius:12px;margin-bottom:15px}
-        .folder-list{max-height:200px;overflow-y:auto;margin-bottom:12px}
-        .folder-item{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:1px solid var(--border);cursor:pointer}
-        .folder-item.selected{border-color:var(--purple);background:#f3e8ff}
+        .prefix-checkbox{flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.05);border-radius:12px;cursor:pointer;min-width:90px;transition:all .2s;color:var(--text-muted)}
+        .prefix-checkbox:has(input:checked){border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.2);color:#c4b5fd}
+        .discount-section{background:rgba(139,92,246,0.1);border:1px dashed rgba(139,92,246,0.3);padding:15px;border-radius:12px;margin-bottom:15px}
+        .discount-section label{color:#c4b5fd}
+        .folder-list{max-height:200px;overflow-y:auto;margin-bottom:12px;color:var(--text-light)}
+        .folder-item{background:rgba(255,255,255,0.05);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:1px solid var(--glass-border);cursor:pointer;transition:all .2s;color:var(--text-light)}
+        .folder-item.selected{border-color:rgba(139,92,246,0.4);background:rgba(139,92,246,0.2)}
+        .folder-item span,.folder-item small,.folder-item div{color:var(--text-light)!important}
+        .folder-item *{color:var(--text-light)}
+        #wcFolderList .folder-item{color:var(--text-light)}
+        #wcFolderList .folder-item *{color:var(--text-light)!important}
         .current-folder-badge{display:inline-block;background:var(--purple);color:#fff;padding:4px 10px;border-radius:12px;font-size:.8em;margin-left:8px;font-weight:600}
         
-        /* FIX: Адаптивный блок карусели баркодов - ограничиваем ширину svg */
+        /* Контейнер карусели баркодов glassmorphism */
         .barcode-carousel-display{
             background:#fff;
             border-radius:20px;
@@ -152,40 +256,93 @@
             text-align:center;
             border:2px solid var(--purple);
             overflow:hidden;
+            box-shadow:0 4px 20px rgba(0,0,0,0.2);
         }
-        .barcode-carousel-display svg{
+
+        /* Обёртка для SVG с фиксированной высотой */
+        .barcode-svg-wrapper{
+            height:120px;
+            min-height:120px;
+            max-height:120px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            margin:10px 0;
+        }
+        .barcode-svg-wrapper svg{
             max-width:100%;
-            width:100%;
+            max-height:100%;
             height:auto;
+            width:auto;
             display:block;
-            margin:0 auto;
         }
-        
-        .backup-section{background:#f3f4f6;border:1px dashed #9ca3af;border-radius:12px;padding:15px;margin-top:25px;text-align:center}
-        .backup-title{font-size:.9em;font-weight:700;color:#4b5563;margin-bottom:10px}
+
+        .backup-section{background:rgba(255,255,255,0.05);border:1px dashed var(--glass-border);border-radius:16px;padding:15px;margin-top:25px;text-align:center}
+        .backup-title{font-size:.9em;font-weight:700;color:var(--text-muted);margin-bottom:10px}
         .backup-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-        .history-panel{background:#fefce8;border:1px solid #fde047;border-radius:12px;padding:15px;margin-top:20px}
-        .history-panel h4{margin:0 0 10px;color:#854d0e;font-size:.9em;display:flex;justify-content:space-between;align-items:center}
+        .history-panel{background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.2);border-radius:16px;padding:15px;margin-top:20px}
+        .history-panel h4{margin:0 0 10px;color:#fcd34d;font-size:.9em;display:flex;justify-content:space-between;align-items:center}
         .history-list{max-height:150px;overflow-y:auto}
-        .history-item{display:flex;gap:8px;padding:8px;background:#fff;border-radius:8px;margin-bottom:6px;font-size:.75em;cursor:pointer}
-        .history-item:hover{background:#fef9c3}
-        .history-time{color:#a16207;min-width:50px}
-        .history-type{color:#65a30d;font-weight:600;min-width:40px}
-        .history-code{color:#333;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+        .history-item{display:flex;gap:8px;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px;margin-bottom:6px;font-size:.75em;cursor:pointer;transition:all .2s;border:1px solid transparent}
+        .history-item:hover{background:rgba(255,255,255,0.1);border-color:var(--glass-border)}
+        .history-time{color:#fcd34d;min-width:50px}
+        .history-type{color:var(--primary);font-weight:600;min-width:40px}
+        .history-code{color:var(--text-light);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
         .input-group{display:flex;gap:8px}
         .input-group>*{height:48px}
         .d-none{display:none!important}
         .form-row{display:flex;gap:8px;flex-wrap:wrap}
         .controls{text-align:center;margin-top:20px}
+
+        /* Стили таймера */
+        #timer{color:var(--text-muted);font-size:.9em}
+        #countdown{color:var(--text-light)}
+        #rotation-status,#wc-rotation-status{color:var(--text-muted)}
         
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
         .pulse{animation:pulse 1.5s infinite}
         
-        /* FIX: Замедленная анимация вспышки (0.5s вместо 0.3s) */
-        .flash{animation:flash .5s ease-out}
-        @keyframes flash{0%{opacity:0;transform:scale(0.95)}100%{opacity:1;transform:scale(1)}}
+        /* FIX: Плавная анимация появления для текста */
+        .flash{animation:flash .4s ease-out}
+        @keyframes flash{
+            0%{opacity:.6}
+            100%{opacity:1}
+        }
         
-        /* FIX: Кнопка редактирования названия */
+        /* Анимация баркода - flicker для триггера сканера */
+        .barcode-pulse{
+            animation:barcodePulse .4s linear;
+        }
+        @keyframes barcodePulse{
+            0%{opacity:0}
+            25%{opacity:0}
+            26%{opacity:1}
+            100%{opacity:1}
+        }
+
+        /* Белая вспышка поверх контейнера - плавное угасание */
+        .barcode-svg-wrapper{
+            position:relative;
+        }
+        .barcode-svg-wrapper::after{
+            content:'';
+            position:absolute;
+            top:0;left:0;right:0;bottom:0;
+            background:#fff;
+            opacity:0;
+            pointer-events:none;
+            border-radius:8px;
+        }
+        .barcode-svg-wrapper.flash-overlay::after{
+            animation:flashOverlay .7s ease-out;
+        }
+        @keyframes flashOverlay{
+            0%{opacity:0.85}
+            100%{opacity:0}
+        }
+        
+        /* Кнопка редактирования названия */
         .sg-edit-name-btn{
             background:transparent;
             border:none;
@@ -195,8 +352,34 @@
             padding:4px 8px;
             border-radius:8px;
             margin-left:8px;
+            transition:all .2s;
         }
-        .sg-edit-name-btn:hover{background:var(--light)}
+        .sg-edit-name-btn:hover{background:rgba(16,185,129,0.1)}
+
+        /* Информация о баркоде с фиксированной высотой строки */
+        #wcBarcodeInfo{
+            min-height:24px;
+            line-height:24px;
+            color:#333;
+        }
+        #wcBarcodeText{
+            font-family:monospace;
+            margin:10px 0;
+            min-height:20px;
+            font-size:1.1em;
+            color:#333;
+        }
+        #wcCarouselCounter{
+            margin-top:10px;
+            color:#666;
+            min-height:20px;
+        }
+
+        /* Дополнительные стили для согласованности */
+        .counter{color:var(--text-muted)}
+        .saved-item div[style*="color:#666"],.weight-item div[style*="color:#666"]{color:var(--text-muted)!important}
+        .bulk-actions span{color:var(--text-light)}
+        .bulk-actions strong{color:var(--primary)}
     </style>
 </head>
 <body>
@@ -208,15 +391,15 @@
     </div>
     
     <div class="tabs">
-        <button class="tab-btn active" data-tab="datamatrix">📱 DM</button>
-        <button class="tab-btn" data-tab="library">📚 Библ.</button>
-        <button class="tab-btn" data-tab="barcode">🏷️ Вес</button>
-        <button class="tab-btn" data-tab="simplegen">🛠️ Констр.</button>
-        <button class="tab-btn" data-tab="weightcarousel">⚖️ Карусель</button>
+        <button class="tab-btn active" data-tab="datamatrix">DataMatrix</button>
+        <button class="tab-btn" data-tab="library">Библиотека</button>
+        <button class="tab-btn" data-tab="barcode">Весовые</button>
+        <button class="tab-btn" data-tab="simplegen">Конструктор</button>
+        <button class="tab-btn" data-tab="weightcarousel">Карусель</button>
     </div>
     
     <div id="tab-datamatrix" class="tab-content active">
-        <div id="mode-indicator"><span class="mode-badge default" id="mode-badge">📦 Демо</span></div>
+        <div id="mode-indicator"><span class="mode-badge default" id="mode-badge">Демо</span></div>
         <div class="dm-visual-row">
             <button id="dm-prev-btn" class="dm-nav-arrow" style="display:none">❮</button>
             <div id="code-container"><div id="datamatrix-container"></div></div>
@@ -236,11 +419,11 @@
                 <button class="interval-btn" data-interval="2">2</button>
                 <input type="number" id="dm-custom-interval" class="custom-interval-input" step="0.1" min="0.1" value="0.7">
             </div>
-            <div id="timer" style="text-align:center;margin:10px 0">⏱️ <span class="pulse" id="countdown">Загрузка...</span></div>
+            <div id="timer" style="text-align:center;margin:10px 0"><span class="pulse" id="countdown">Загрузка...</span></div>
             <div class="dm-play-controls">
-                <button class="btn btn-warning btn-sm" id="dm-pause-btn">⏸ Стоп</button>
-                <button class="btn btn-success btn-sm" id="dm-play-btn" style="display:none">▶ Старт</button>
-                <button class="btn btn-primary btn-sm" id="refresh-btn">✨ Обновить</button>
+                <button class="btn btn-warning btn-sm" id="dm-pause-btn">Стоп</button>
+                <button class="btn btn-success btn-sm" id="dm-play-btn" style="display:none">Старт</button>
+                <button class="btn btn-primary btn-sm" id="refresh-btn">Обновить</button>
             </div>
         </div>
     </div>
@@ -249,45 +432,45 @@
         <div class="add-form">
             <label>Добавить GTIN:</label>
             <textarea id="barcode-input" placeholder="Баркоды (каждый с новой строки)"></textarea>
-            <div class="hint">💡 EAN-13 → DataMatrix по шаблону</div>
+            <div class="hint">EAN-13 → DataMatrix по шаблону</div>
             <div class="template-selector">
                 <label>Шаблон:</label>
                 <div class="template-btns">
-                    <div class="tmpl-btn active" data-template="type1"><span class="tmpl-name">📦 Тип 1</span><span style="font-size:.8em;color:#666">Табак/Вода</span></div>
-                    <div class="tmpl-btn" data-template="type2"><span class="tmpl-name">🔐 Тип 2</span><span style="font-size:.8em;color:#666">Обувь/Одежда</span></div>
+                    <div class="tmpl-btn active" data-template="type1"><span class="tmpl-name">Тип 1</span><span style="font-size:.8em;opacity:.7">Табак/Вода</span></div>
+                    <div class="tmpl-btn" data-template="type2"><span class="tmpl-name">Тип 2</span><span style="font-size:.8em;opacity:.7">Обувь/Одежда</span></div>
                 </div>
             </div>
             <div class="form-row">
-                <button class="btn btn-success btn-sm" id="add-btn">➕ Добавить</button>
-                <button class="btn btn-secondary btn-sm" id="clear-input-btn">🗑️ Очистить</button>
+                <button class="btn btn-success btn-sm" id="add-btn">Добавить</button>
+                <button class="btn btn-secondary btn-sm" id="clear-input-btn">Очистить</button>
             </div>
         </div>
         <div class="bulk-actions">
-            <span style="flex:1;font-size:.85em;color:#92400e">Выбрано: <strong id="selected-count">0</strong></span>
-            <button class="btn btn-outline btn-sm" id="select-all-btn">✓ Все</button>
-            <button class="btn btn-outline btn-sm" id="deselect-all-btn">✕ Снять</button>
+            <span style="flex:1;font-size:.85em">Выбрано: <strong id="selected-count">0</strong></span>
+            <button class="btn btn-outline btn-sm" id="select-all-btn">Все</button>
+            <button class="btn btn-outline btn-sm" id="deselect-all-btn">Снять</button>
         </div>
         <div class="rotation-controls" id="rotation-controls">
             <div id="rotation-status">Выберите GTIN для ротации</div>
             <div style="margin-top:10px;display:flex;justify-content:center;gap:10px">
-                <button class="btn btn-success btn-sm" id="start-btn">▶️ Запустить</button>
-                <button class="btn btn-warning btn-sm" id="stop-btn" style="display:none">⏹️ Стоп</button>
+                <button class="btn btn-success btn-sm" id="start-btn">Запустить</button>
+                <button class="btn btn-warning btn-sm" id="stop-btn" style="display:none">Стоп</button>
             </div>
         </div>
         <div class="saved-list">
-            <h3><span>💾 Сохранённые</span><button class="btn btn-danger btn-sm" id="clear-all-btn">Очистить</button></h3>
+            <h3><span>Сохранённые</span><button class="btn btn-danger btn-sm" id="clear-all-btn">Очистить</button></h3>
             <div id="saved-list"></div>
         </div>
         <div class="backup-section">
-            <div class="backup-title">🛠️ Резервное копирование</div>
+            <div class="backup-title">Резервное копирование</div>
             <div class="backup-actions">
-                <button class="btn btn-primary btn-sm" id="exportDataBtn">⬇️ Скачать</button>
-                <button class="btn btn-dark btn-sm" id="importDataBtn">⬆️ Загрузить</button>
+                <button class="btn btn-primary btn-sm" id="exportDataBtn">Скачать</button>
+                <button class="btn btn-dark btn-sm" id="importDataBtn">Загрузить</button>
                 <input type="file" id="importFile" accept=".json" style="display:none">
             </div>
         </div>
         <div class="history-panel">
-            <h4><span>📜 История (50)</span><button class="btn btn-outline btn-sm" id="clearHistoryBtn" style="padding:4px 8px;font-size:.7em">Очистить</button></h4>
+            <h4><span>История (50)</span><button class="btn btn-outline btn-sm" id="clearHistoryBtn" style="padding:4px 8px;font-size:.7em">Очистить</button></h4>
             <div class="history-list" id="historyList"></div>
         </div>
     </div>
@@ -306,7 +489,7 @@
             </div>
             <div id="barcodeParams"></div>
             <label class="checkbox-row"><input type="checkbox" id="simulateError"><span>Симуляция ошибки CRC</span></label>
-            <div class="controls"><button class="btn btn-primary" id="generateBarcodeBtn">🏷️ Сгенерировать</button></div>
+            <div class="controls"><button class="btn btn-primary" id="generateBarcodeBtn">Сгенерировать</button></div>
         </div>
         <div class="barcode-result" id="barcodeResult" style="display:none">
             <div class="result-text" id="barcodeText">-</div>
@@ -324,7 +507,7 @@
                 <div class="form-group"><input type="text" id="sgValue" placeholder="Значение" autocomplete="off"></div>
                 <div class="simple-preview"><span style="color:#999;font-size:.8em;position:absolute;top:5px;left:10px">Превью</span><svg id="sgSvg" style="display:none"></svg></div>
                 <div class="sg-save-panel">
-                    <label style="font-weight:700;color:#1e40af">Сохранить в папку</label>
+                    <label style="font-weight:700">Сохранить в папку</label>
                     <div class="form-group" style="margin-top:10px">
                         <div class="input-group">
                             <select id="sgFolderSelect" style="flex:1"></select>
@@ -333,22 +516,23 @@
                         </div>
                     </div>
                     <div class="form-group"><input type="text" id="sgName" placeholder="Название"></div>
-                    <button class="btn btn-success" style="width:100%" id="sgAddBtn">💾 Сохранить</button>
+                    <button class="btn btn-success" style="width:100%" id="sgAddBtn">Сохранить</button>
                 </div>
             </div>
-            <div class="folders-section" style="background:#e0f2fe;border-color:#bfdbfe">
-                <h4 style="color:#1e3a8a;margin:0 0 10px">📂 Мои папки</h4>
+            <div class="folders-section">
+                <h4>Мои папки</h4>
                 <div id="sgFoldersList"></div>
             </div>
         </div>
         <div id="sg-view-carousel" style="display:none">
             <div class="sg-back-btn" id="sgBackBtn">← Назад</div>
-            <h3 id="sgActiveFolderName" style="text-align:center;margin:0 0 15px">Папка</h3>
-            <!-- FIX: Новая структура карусели - стрелки под баркодом -->
+            <h3 id="sgActiveFolderName" style="text-align:center;margin:0 0 15px;color:var(--text-light)">Папка</h3>
             <div class="sg-carousel">
                 <div class="sg-display-area">
-                    <div class="sg-item-name" id="sgCarouselName">-</div>
-                    <button class="sg-edit-name-btn" id="sgEditNameBtn" title="Редактировать название">✏️</button>
+                    <div style="display:flex;align-items:center;justify-content:center">
+                        <span class="sg-item-name" id="sgCarouselName">-</span>
+                        <button class="sg-edit-name-btn" id="sgEditNameBtn" title="Редактировать название">✎</button>
+                    </div>
                     <svg id="sgCarouselSvg"></svg>
                     <div class="sg-item-counter" id="sgCarouselCounter">0/0</div>
                 </div>
@@ -358,21 +542,21 @@
                 </div>
             </div>
             <div style="margin-top:20px;display:flex;justify-content:center;gap:10px">
-                <button class="btn btn-warning btn-sm" id="sgRenameFolderBtn">✏️ Переим.</button>
-                <button class="btn btn-danger btn-sm" id="sgDeleteFolderBtn">🗑️ Уд. папку</button>
+                <button class="btn btn-warning btn-sm" id="sgRenameFolderBtn">Переим.</button>
+                <button class="btn btn-danger btn-sm" id="sgDeleteFolderBtn">Уд. папку</button>
             </div>
-            <div style="text-align:center;margin-top:10px"><button class="btn btn-outline btn-sm" id="sgDeleteItemBtn" style="color:#ef4444;border-color:#ef4444">❌ Удалить</button></div>
+            <div style="text-align:center;margin-top:10px"><button class="btn btn-danger btn-sm" id="sgDeleteItemBtn">Удалить</button></div>
         </div>
     </div>
     
     <div id="tab-weightcarousel" class="tab-content">
         <div class="folders-section">
-            <h4>📁 Папки (Весовые)</h4>
+            <h4>Папки (Весовые)</h4>
             <div class="folder-list" id="wcFolderList"></div>
             <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-                <button class="btn btn-purple btn-sm" id="wc-run-folder">▶️ Запуск</button>
-                <button class="btn btn-warning btn-sm" id="wc-rename-folder">✏️</button>
-                <button class="btn btn-danger btn-sm" id="wc-delete-folder">🗑️</button>
+                <button class="btn btn-purple btn-sm" id="wc-run-folder">Запуск</button>
+                <button class="btn btn-warning btn-sm" id="wc-rename-folder">✎</button>
+                <button class="btn btn-danger btn-sm" id="wc-delete-folder">×</button>
             </div>
         </div>
         <div class="weight-carousel-form">
@@ -385,10 +569,10 @@
             </div>
             <div class="form-group"><label>PLU коды</label><textarea id="wcProductCode" placeholder="1234" style="height:70px"></textarea></div>
             <div id="group-discount-section" class="discount-section d-none">
-                <label style="font-weight:700;color:#7c3aed">🏷️ Скидка (49)</label>
+                <label style="font-weight:700">Скидка (49)</label>
                 <div class="weight-mode-switch" style="margin-top:8px">
-                    <input type="radio" name="discountMode" id="discFixed" value="fixed" checked><label class="weight-mode-label" for="discFixed">🔒 Фикс.</label>
-                    <input type="radio" name="discountMode" id="discRandom" value="random"><label class="weight-mode-label" for="discRandom">🎲 Rand</label>
+                    <input type="radio" name="discountMode" id="discFixed" value="fixed" checked><label class="weight-mode-label" for="discFixed">Фикс.</label>
+                    <input type="radio" name="discountMode" id="discRandom" value="random"><label class="weight-mode-label" for="discRandom">Rand</label>
                 </div>
                 <div id="disc-fixed-group"><input type="number" id="wcDiscount" value="0" min="0" max="99"><div class="hint">%</div></div>
                 <div id="disc-random-group" class="d-none"><div class="weight-range-row"><input type="number" id="wcDiscMin" value="5"><span>—</span><input type="number" id="wcDiscMax" value="30"></div></div>
@@ -396,36 +580,38 @@
             <hr class="weight-divider">
             <label style="font-weight:700">Вес:</label>
             <div class="weight-mode-switch">
-                <input type="radio" name="weightMode" id="weightRandom" value="random" checked><label class="weight-mode-label" for="weightRandom">🎲 Random</label>
-                <input type="radio" name="weightMode" id="weightFixed" value="fixed"><label class="weight-mode-label" for="weightFixed">⚓ Фикс.</label>
+                <input type="radio" name="weightMode" id="weightRandom" value="random" checked><label class="weight-mode-label" for="weightRandom">Random</label>
+                <input type="radio" name="weightMode" id="weightFixed" value="fixed"><label class="weight-mode-label" for="weightFixed">Фикс.</label>
             </div>
             <div class="form-group" id="group-random-weight"><label>Диапазон (г)</label><div class="weight-range-row"><input type="number" id="wcWeightMin" value="150"><span>—</span><input type="number" id="wcWeightMax" value="8000"></div></div>
             <div class="form-group d-none" id="group-fixed-weight"><label>Фикс. вес (г)</label><input type="number" id="wcFixedWeight" value="500"></div>
             <div class="form-group"><label id="wcVariationsLabel">Вариаций</label><input type="number" id="wcVariations" value="10" min="1" max="100"><div class="hint" id="wcVariationsHint">Весов на PLU</div></div>
-            <div class="controls"><button class="btn btn-purple" id="wcAddToCarousel">➕ Добавить</button></div>
+            <div class="controls"><button class="btn btn-purple" id="wcAddToCarousel">Добавить</button></div>
         </div>
         <div class="bulk-actions">
-            <span style="flex:1;font-size:.8em">В папке: <strong id="wc-items-count">0</strong> <span id="wc-current-folder-name"></span></span>
-            <button class="btn btn-outline btn-sm" id="wc-select-all">✓</button>
-            <button class="btn btn-outline btn-sm" id="wc-deselect-all">✕</button>
-            <button class="btn btn-danger btn-sm" id="wc-clear-selected">🗑️</button>
+            <span style="flex:1;font-size:.8em;color:var(--text-light)">В папке: <strong id="wc-items-count">0</strong> <span id="wc-current-folder-name"></span></span>
+            <button class="btn btn-outline btn-sm" id="wc-select-all">Все</button>
+            <button class="btn btn-outline btn-sm" id="wc-deselect-all">Снять</button>
+            <button class="btn btn-danger btn-sm" id="wc-clear-selected">×</button>
         </div>
         <div class="weight-items-list" id="wcItemsList"></div>
         <div class="rotation-controls" id="wc-rotation-controls">
             <div id="wc-rotation-status">Создайте папку</div>
             <div style="margin-top:10px;display:flex;justify-content:center;gap:10px">
-                <button class="btn btn-success btn-sm" id="wc-start-btn">▶️ Старт</button>
-                <button class="btn btn-warning btn-sm" id="wc-stop-btn" style="display:none">⏹️ Стоп</button>
+                <button class="btn btn-success btn-sm" id="wc-start-btn">Старт</button>
+                <button class="btn btn-warning btn-sm" id="wc-stop-btn" style="display:none">Стоп</button>
             </div>
         </div>
+        <!-- FIX: Обновлённый контейнер карусели с wrapper для SVG -->
         <div class="barcode-carousel-display" id="wcCarouselDisplay" style="display:none">
             <div id="wcBarcodeInfo">-</div>
-            <div id="wcBarcodeText" style="font-family:monospace;margin:10px 0">-</div>
-            <svg id="wcBarcodeSvg"></svg>
-            <div id="wcCarouselCounter" style="margin-top:10px;color:#888">1/1</div>
+            <div id="wcBarcodeText">-</div>
+            <div class="barcode-svg-wrapper">
+                <svg id="wcBarcodeSvg"></svg>
+            </div>
+            <div id="wcCarouselCounter">1/1</div>
         </div>
         <div class="interval-selector">
-            <span style="font-size:.8em;color:#666">⏱️</span>
             <button class="wc-interval-btn" data-interval="0.5">0.5</button>
             <button class="wc-interval-btn active" data-interval="0.7">0.7</button>
             <button class="wc-interval-btn" data-interval="1">1</button>
