@@ -311,18 +311,41 @@ var Controllers = {
             setTimeout(function() { Utils.scrollToElement(document.getElementById('wcCarouselDisplay'), 100); }, 100);
         },
         stopRotation: function() { AppState.wc.isRotating = false; this.stopTimer(); document.getElementById('wc-start-btn').style.display = 'inline-flex'; document.getElementById('wc-stop-btn').style.display = 'none'; document.getElementById('wcCarouselDisplay').style.display = 'none'; UI.updateWcStatus(); },
+        
+        // FIX: Обновлённая функция displayBarcode с резкой вспышкой для сканера
         displayBarcode: function() {
             var items = AppState.wc.rotationItems; if (items.length === 0) return;
             var item = items[AppState.wc.rotationIndex % items.length];
             var w = (item.weight / 1000).toFixed(3) + ' кг', d = item.prefix === '49' && item.discount !== undefined ? ' | Скидка: ' + item.discount + '%' : '';
+            
+            // Обновляем текстовую информацию
             document.getElementById('wcBarcodeInfo').innerHTML = '<b>PLU:</b> ' + item.plu + ' | <b>Вес:</b> ' + w + d;
             document.getElementById('wcBarcodeText').textContent = item.code;
             document.getElementById('wcCarouselCounter').textContent = ((AppState.wc.rotationIndex % items.length) + 1) + '/' + items.length;
-            Generators.renderBarcode(document.getElementById('wcBarcodeSvg'), item.code, item.format);
-            AppState.wc.rotationIndex++; AppState.addToHistory({ type: 'WC', code: item.code });
-            var container = document.getElementById('wcCarouselDisplay');
-            if (container) { container.classList.remove('flash'); void container.offsetWidth; container.classList.add('flash'); }
+            
+            var svgEl = document.getElementById('wcBarcodeSvg');
+            var wrapperEl = document.querySelector('.barcode-svg-wrapper');
+            
+            // FIX: Резкая вспышка для сканера - белый оверлей + исчезновение SVG
+            if (wrapperEl) {
+                wrapperEl.classList.remove('flash-overlay');
+                void wrapperEl.offsetWidth;
+                wrapperEl.classList.add('flash-overlay');
+            }
+            
+            if (svgEl) {
+                svgEl.classList.remove('barcode-pulse');
+                void svgEl.offsetWidth;
+                svgEl.classList.add('barcode-pulse');
+            }
+            
+            // Рендерим баркод
+            Generators.renderBarcode(svgEl, item.code, item.format);
+            
+            AppState.wc.rotationIndex++; 
+            AppState.addToHistory({ type: 'WC', code: item.code });
         },
+        
         startTimer: function() { var self = this; this.stopTimer(); AppState.wc.remaining = AppState.wc.timerValue; AppState.wc.timerInterval = setInterval(function() { AppState.wc.remaining -= 0.1; if (AppState.wc.remaining <= 0.05) { self.displayBarcode(); AppState.wc.remaining = AppState.wc.timerValue; } }, 100); },
         stopTimer: function() { if (AppState.wc.timerInterval) { clearInterval(AppState.wc.timerInterval); AppState.wc.timerInterval = null; } },
         setInterval: function(val) { if (isNaN(val) || val <= 0) return; AppState.wc.timerValue = val; if (AppState.wc.isRotating) this.startTimer(); },
@@ -340,7 +363,6 @@ var Controllers = {
         deleteItem: function() { var f = AppState.getSgFolder(); if (f && f.items.length > 0 && confirm('Удалить?')) { f.items.splice(AppState.sg.carouselIndex, 1); if (AppState.sg.carouselIndex >= f.items.length) AppState.sg.carouselIndex = Math.max(0, f.items.length - 1); Storage.save(); UI.renderSgCarousel(); } },
         deleteFolder: function() { if (confirm('Удалить папку?')) { AppState.sg.folders = AppState.sg.folders.filter(function(f) { return f.id !== AppState.sg.selectedFolderId; }); Storage.save(); this.closeFolder(); } },
         renameFolder: function() { var f = AppState.getSgFolder(); if (f) { var n = prompt('Имя:', f.name); if (n && n.trim()) { f.name = n.trim(); Storage.save(); document.getElementById('sgActiveFolderName').textContent = f.name; } } },
-        // FIX: Новая функция редактирования названия баркода
         renameItem: function() {
             var f = AppState.getSgFolder();
             if (f && f.items.length > 0) {
@@ -442,7 +464,6 @@ function init() {
     document.getElementById('sgRenameFolderBtn').onclick = function() { Controllers.SG.renameFolder(); };
     document.getElementById('sgDeleteFolderBtn').onclick = function() { Controllers.SG.deleteFolder(); };
     document.getElementById('sgDeleteItemBtn').onclick = function() { Controllers.SG.deleteItem(); };
-    // FIX: Обработчик для редактирования названия баркода
     document.getElementById('sgEditNameBtn').onclick = function() { Controllers.SG.renameItem(); };
     document.getElementById('wcAddToCarousel').onclick = function() { Controllers.WC.addItems(); };
     document.getElementById('wc-select-all').onclick = function() { Controllers.WC.selectAll(); };
@@ -462,7 +483,7 @@ function init() {
     document.onvisibilitychange = function() { if (document.hidden) { Controllers.DM.stopTimer(); Controllers.WC.stopTimer(); } else { if (Controllers.Tab.current === 'datamatrix') { Controllers.DM.generateAndDisplay(); Controllers.DM.startTimer(); } if (AppState.wc.isRotating) { Controllers.WC.displayBarcode(); Controllers.WC.startTimer(); } } };
     UI.renderSavedList(); UI.renderBarcodeFields(); UI.renderWcFolders(); UI.renderWcItems(); UI.renderSgFolders(); UI.renderHistory();
     setTimeout(function() { Controllers.DM.generateAndDisplay(); Controllers.DM.startTimer(); }, 300);
-    console.log('[Generator v2.2] Ready');
+    console.log('[Generator v2.3] Ready');
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(init, 50);
