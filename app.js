@@ -3,7 +3,7 @@
 
 var AppState = {
     STORAGE_KEY: 'barcode_gen_v4',
-    dm: { timerValue: 0.7, remaining: 0.7, timerInterval: null, isRotating: false, rotationList: [], rotationIndex: 0, selectedTemplate: 'type1' },
+    dm: { timerValue: 0.7, remaining: 0.7, timerInterval: null, isRotating: false, rotationList: [], rotationIndex: 0, selectedTemplate: 'type1', generatedCodes: [], codeHistoryIndex: -1 },
     savedItems: [],
     wc: { folders: [], selectedFolderId: null, timerValue: 0.7, remaining: 0.7, timerInterval: null, isRotating: false, rotationIndex: 0, rotationItems: [] },
     sg: { folders: [], selectedFolderId: null, carouselIndex: 0, isNewFolderMode: false },
@@ -239,33 +239,93 @@ var Controllers = {
             if (dm.isRotating && dm.rotationList.length > 0) {
                 var item = dm.rotationList[dm.rotationIndex]; barcode = item.barcode;
                 result = Generators.generateDM(barcode, item.template);
+                // Сохраняем сгенерированный код в кэш
+                dm.generatedCodes.push({ code: result.code, barcode: barcode, templateName: result.templateName, rotationIdx: dm.rotationIndex });
+                dm.codeHistoryIndex = dm.generatedCodes.length - 1;
                 dm.rotationIndex = (dm.rotationIndex + 1) % dm.rotationList.length;
-                this.showCodeInfo(barcode, result.templateName, dm.rotationIndex, dm.rotationList.length);
+                this.showCodeInfo(barcode, result.templateName, dm.codeHistoryIndex + 1, dm.generatedCodes.length);
                 this.updateBadge(true, dm.rotationList.length);
             } else { result = Generators.generateDM(); this.hideCodeInfo(); this.updateBadge(false); }
             Generators.renderDM(document.getElementById('datamatrix-container'), result.code);
             var codeEl = document.getElementById('current-code'); if (codeEl) { codeEl.textContent = result.code; codeEl.classList.add('flash'); setTimeout(function() { codeEl.classList.remove('flash'); }, 300); }
         },
+        displayFromCache: function(index) {
+            var dm = AppState.dm;
+            if (index < 0 || index >= dm.generatedCodes.length) return;
+            var cached = dm.generatedCodes[index];
+            dm.codeHistoryIndex = index;
+            Generators.renderDM(document.getElementById('datamatrix-container'), cached.code);
+            var codeEl = document.getElementById('current-code');
+            if (codeEl) { codeEl.textContent = cached.code; codeEl.classList.add('flash'); setTimeout(function() { codeEl.classList.remove('flash'); }, 300); }
+            this.showCodeInfo(cached.barcode, cached.templateName, index + 1, dm.generatedCodes.length);
+            this.updateBadge(true, dm.rotationList.length);
+        },
         startTimer: function() {
-            var self = this; this.stopTimer(); AppState.dm.remaining = AppState.dm.timerValue; this.updateCountdown(); this.togglePlayState(true);
-            AppState.dm.timerInterval = setInterval(function() { AppState.dm.remaining -= 0.1; if (AppState.dm.remaining <= 0.05) { self.generateAndDisplay(); AppState.dm.remaining = AppState.dm.timerValue; } self.updateCountdown(); }, 100);
+            var self = this, dm = AppState.dm;
+            this.stopTimer();
+            // Если были в середине истории - прыгаем в конец и показываем последний код
+            if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex < dm.generatedCodes.length - 1) {
+                dm.codeHistoryIndex = dm.generatedCodes.length - 1;
+                this.displayFromCache(dm.codeHistoryIndex);
+            }
+            dm.remaining = dm.timerValue; this.updateCountdown(); this.togglePlayState(true);
+            dm.timerInterval = setInterval(function() { dm.remaining -= 0.1; if (dm.remaining <= 0.05) { self.generateAndDisplay(); dm.remaining = dm.timerValue; } self.updateCountdown(); }, 100);
         },
         stopTimer: function() { if (AppState.dm.timerInterval) { clearInterval(AppState.dm.timerInterval); AppState.dm.timerInterval = null; } this.togglePlayState(false); },
         setInterval: function(val) { if (isNaN(val) || val <= 0) return; AppState.dm.timerValue = val; AppState.dm.remaining = val; this.startTimer(); },
         startRotation: function() {
             var active = AppState.savedItems.filter(function(x) { return x.active; }); if (active.length === 0) { alert('Выберите GTIN!'); return; }
             AppState.dm.rotationList = active; AppState.dm.rotationIndex = 0; AppState.dm.isRotating = true;
+            // Очищаем кэш при новом запуске ротации
+            AppState.dm.generatedCodes = []; AppState.dm.codeHistoryIndex = -1;
             Controllers.Tab.switchTo('datamatrix');
             document.getElementById('start-btn').style.display = 'none'; document.getElementById('stop-btn').style.display = 'inline-flex';
             UI.updateRotationStatus(); this.generateAndDisplay(); this.startTimer();
         },
         stopRotation: function() {
-            AppState.dm.isRotating = false; AppState.dm.rotationList = []; this.stopTimer();
+            AppState.dm.isRotating = false; this.stopTimer();
+            // Не очищаем rotationList и кэш - чтобы можно было листать после остановки
             document.getElementById('start-btn').style.display = 'inline-flex'; document.getElementById('stop-btn').style.display = 'none';
-            UI.updateRotationStatus(); this.hideCodeInfo(); this.updateBadge(false);
+            UI.updateRotationStatus();
+            // Показываем инфо о текущем коде из кэша, если он есть
+            var dm = AppState.dm;
+            if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex >= 0) {
+                var cached = dm.generatedCodes[dm.codeHistoryIndex];
+                this.showCodeInfo(cached.barcode, cached.templateName, dm.codeHistoryIndex + 1, dm.generatedCodes.length);
+                this.updateBadge(true, dm.generatedCodes.length);
+            } else {
+                this.hideCodeInfo(); this.updateBadge(false);
+            }
         },
-        manualNext: function() { this.generateAndDisplay(); },
-        manualPrev: function() { if (AppState.dm.isRotating && AppState.dm.rotationList.length > 0) { var l = AppState.dm.rotationList.length; AppState.dm.rotationIndex = (AppState.dm.rotationIndex - 2 + l) % l; } this.generateAndDisplay(); },
+        manualNext: function() {
+            var dm = AppState.dm;
+            // Если есть кэш и мы не в конце - показываем следующий из кэша
+            if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex < dm.generatedCodes.length - 1) {
+                this.displayFromCache(dm.codeHistoryIndex + 1);
+            } else if (dm.rotationList.length > 0) {
+                // Генерируем новый код на основе следующего GTIN
+                var item = dm.rotationList[dm.rotationIndex];
+                var result = Generators.generateDM(item.barcode, item.template);
+                dm.generatedCodes.push({ code: result.code, barcode: item.barcode, templateName: result.templateName });
+                dm.codeHistoryIndex = dm.generatedCodes.length - 1;
+                dm.rotationIndex = (dm.rotationIndex + 1) % dm.rotationList.length;
+                Generators.renderDM(document.getElementById('datamatrix-container'), result.code);
+                var codeEl = document.getElementById('current-code');
+                if (codeEl) { codeEl.textContent = result.code; codeEl.classList.add('flash'); setTimeout(function() { codeEl.classList.remove('flash'); }, 300); }
+                this.showCodeInfo(item.barcode, result.templateName, dm.codeHistoryIndex + 1, dm.generatedCodes.length);
+                this.updateBadge(true, dm.rotationList.length);
+            } else {
+                // Демо-режим - генерируем случайный код
+                this.generateAndDisplay();
+            }
+        },
+        manualPrev: function() {
+            var dm = AppState.dm;
+            // Если есть кэш и мы не в начале - показываем предыдущий из кэша
+            if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex > 0) {
+                this.displayFromCache(dm.codeHistoryIndex - 1);
+            }
+        },
         updateCountdown: function() { var el = document.getElementById('countdown'); if (el) el.textContent = 'через ' + Math.max(0, AppState.dm.remaining).toFixed(1) + ' сек'; },
         togglePlayState: function(p) {
             var play = document.getElementById('dm-play-btn'), pause = document.getElementById('dm-pause-btn'), navArrows = document.getElementById('dm-nav-arrows');
