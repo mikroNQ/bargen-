@@ -524,15 +524,24 @@ function init() {
     document.querySelectorAll('input[name="discountMode"]').forEach(function(r) { r.onchange = function() { var m = document.querySelector('input[name="discountMode"]:checked'); var mode = m ? m.value : 'fixed'; document.getElementById('disc-fixed-group').classList.toggle('d-none', mode !== 'fixed'); document.getElementById('disc-random-group').classList.toggle('d-none', mode === 'fixed'); }; });
     document.getElementById('wcPrefix49').onchange = function() { document.getElementById('group-discount-section').classList.toggle('d-none', !document.getElementById('wcPrefix49').checked); };
     document.onkeydown = function(e) {
+        // DataMatrix - стрелки при остановленном таймере
         var dm = document.getElementById('tab-datamatrix');
         if (dm && dm.classList.contains('active') && !AppState.dm.timerInterval) {
             if (e.key === 'ArrowLeft') Controllers.DM.manualPrev();
             if (e.key === 'ArrowRight') Controllers.DM.manualNext();
         }
+        // Карусель весовых - стрелки при наличии баркодов
         var wc = document.getElementById('tab-weightcarousel');
         if (wc && wc.classList.contains('active') && AppState.wc.rotationItems.length > 0) {
             if (e.key === 'ArrowLeft') Controllers.WC.manualPrev();
             if (e.key === 'ArrowRight') Controllers.WC.manualNext();
+        }
+        // Конструктор - стрелки при открытой папке
+        var sg = document.getElementById('tab-simplegen');
+        var sgCarousel = document.getElementById('sg-view-carousel');
+        if (sg && sg.classList.contains('active') && sgCarousel && sgCarousel.style.display !== 'none') {
+            if (e.key === 'ArrowLeft') Controllers.SG.prev();
+            if (e.key === 'ArrowRight') Controllers.SG.next();
         }
     };
     document.onvisibilitychange = function() { if (document.hidden) { Controllers.DM.stopTimer(); Controllers.WC.stopTimer(); } else { if (Controllers.Tab.current === 'datamatrix') { Controllers.DM.generateAndDisplay(); Controllers.DM.startTimer(); } if (AppState.wc.isRotating) { Controllers.WC.displayBarcode(); Controllers.WC.startTimer(); } } };
