@@ -268,9 +268,9 @@ var Controllers = {
         manualPrev: function() { if (AppState.dm.isRotating && AppState.dm.rotationList.length > 0) { var l = AppState.dm.rotationList.length; AppState.dm.rotationIndex = (AppState.dm.rotationIndex - 2 + l) % l; } this.generateAndDisplay(); },
         updateCountdown: function() { var el = document.getElementById('countdown'); if (el) el.textContent = 'через ' + Math.max(0, AppState.dm.remaining).toFixed(1) + ' сек'; },
         togglePlayState: function(p) {
-            var play = document.getElementById('dm-play-btn'), pause = document.getElementById('dm-pause-btn'), prev = document.getElementById('dm-prev-btn'), next = document.getElementById('dm-next-btn');
-            if (p) { play.style.display = 'none'; pause.style.display = 'inline-flex'; prev.style.display = 'none'; next.style.display = 'none'; }
-            else { play.style.display = 'inline-flex'; pause.style.display = 'none'; prev.style.display = 'flex'; next.style.display = 'flex'; }
+            var play = document.getElementById('dm-play-btn'), pause = document.getElementById('dm-pause-btn'), navArrows = document.getElementById('dm-nav-arrows');
+            if (p) { play.style.display = 'none'; pause.style.display = 'inline-flex'; navArrows.style.display = 'none'; }
+            else { play.style.display = 'inline-flex'; pause.style.display = 'none'; navArrows.style.display = 'flex'; }
         },
         showCodeInfo: function(b, t, i, total) { document.getElementById('code-info').style.display = 'block'; document.getElementById('info-barcode').textContent = b; document.getElementById('info-template').textContent = t; document.getElementById('info-counter').textContent = (i === 0 ? total : i) + '/' + total; },
         hideCodeInfo: function() { document.getElementById('code-info').style.display = 'none'; },
