@@ -468,10 +468,27 @@
     </div>
     
     <div id="tab-library" class="tab-content">
+        <div class="folders-section">
+            <h4>Папки (DataMatrix)</h4>
+            <div class="folder-list" id="dmFolderList"></div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+                <button class="btn btn-primary btn-sm" id="dm-run-folder">Запуск</button>
+                <button class="btn btn-warning btn-sm" id="dm-rename-folder">✎</button>
+                <button class="btn btn-danger btn-sm" id="dm-delete-folder">×</button>
+            </div>
+        </div>
         <div class="add-form">
             <label>Добавить GTIN:</label>
             <textarea id="barcode-input" placeholder="Баркоды (каждый с новой строки)"></textarea>
             <div class="hint">EAN-13 → DataMatrix по шаблону</div>
+            <div class="form-group" style="margin-top:10px">
+                <label>Сохранить в папку:</label>
+                <div class="input-group">
+                    <select id="dmFolderSelect" style="flex:1"></select>
+                    <input type="text" id="dmFolderInput" class="d-none" style="flex:1" placeholder="Имя новой папки">
+                    <button class="btn btn-purple btn-sm" id="dmFolderModeBtn" style="min-width:50px;font-size:1.4em;padding:0">＋</button>
+                </div>
+            </div>
             <div class="template-selector">
                 <label>Шаблон:</label>
                 <div class="template-btns">
@@ -485,20 +502,18 @@
             </div>
         </div>
         <div class="bulk-actions">
-            <span style="flex:1;font-size:.85em">Выбрано: <strong id="selected-count">0</strong></span>
+            <span style="flex:1;font-size:.8em;color:var(--text-light)">В папке: <strong id="dm-items-count">0</strong> <span id="dm-current-folder-name"></span></span>
             <button class="btn btn-outline btn-sm" id="select-all-btn">Все</button>
             <button class="btn btn-outline btn-sm" id="deselect-all-btn">Снять</button>
+            <button class="btn btn-danger btn-sm" id="clear-all-btn">×</button>
         </div>
+        <div id="dmItemsList" class="weight-items-list"></div>
         <div class="rotation-controls" id="rotation-controls">
-            <div id="rotation-status">Выберите GTIN для ротации</div>
+            <div id="rotation-status">Создайте папку</div>
             <div style="margin-top:10px;display:flex;justify-content:center;gap:10px">
                 <button class="btn btn-success btn-sm" id="start-btn">Запустить</button>
                 <button class="btn btn-warning btn-sm" id="stop-btn" style="display:none">Стоп</button>
             </div>
-        </div>
-        <div class="saved-list">
-            <h3><span>Сохранённые</span><button class="btn btn-danger btn-sm" id="clear-all-btn">Очистить</button></h3>
-            <div id="saved-list"></div>
         </div>
         <div class="backup-section">
             <div class="backup-title">Резервное копирование</div>
