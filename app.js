@@ -310,41 +310,63 @@ var Controllers = {
             document.getElementById('wcCarouselDisplay').style.display = 'block'; UI.updateWcStatus(); this.displayBarcode(); this.startTimer();
             setTimeout(function() { Utils.scrollToElement(document.getElementById('wcCarouselDisplay'), 100); }, 100);
         },
-        stopRotation: function() { AppState.wc.isRotating = false; this.stopTimer(); document.getElementById('wc-start-btn').style.display = 'inline-flex'; document.getElementById('wc-stop-btn').style.display = 'none'; document.getElementById('wcCarouselDisplay').style.display = 'none'; UI.updateWcStatus(); },
-        manualNext: function() { if (AppState.wc.isRotating && AppState.wc.rotationItems.length > 0) { this.displayBarcode(); } },
-        manualPrev: function() { if (AppState.wc.isRotating && AppState.wc.rotationItems.length > 0) { var l = AppState.wc.rotationItems.length; AppState.wc.rotationIndex = (AppState.wc.rotationIndex - 2 + l) % l; this.displayBarcode(); } },
+        stopRotation: function() {
+            AppState.wc.isRotating = false; this.stopTimer();
+            document.getElementById('wc-start-btn').style.display = 'inline-flex';
+            document.getElementById('wc-stop-btn').style.display = 'none';
+            // Останавливаем анимацию и фиксируем баркод на месте
+            var wrapperEl = document.querySelector('.barcode-svg-wrapper');
+            if (wrapperEl) {
+                wrapperEl.classList.remove('barcode-pulse');
+                wrapperEl.classList.remove('barcode-slide');
+                wrapperEl.classList.add('barcode-static');
+            }
+            UI.updateWcStatus();
+        },
+        manualNext: function() { if (AppState.wc.rotationItems.length > 0) { this.displayBarcodeManual(); } },
+        manualPrev: function() { if (AppState.wc.rotationItems.length > 0) { var l = AppState.wc.rotationItems.length; AppState.wc.rotationIndex = (AppState.wc.rotationIndex - 2 + l) % l; if (AppState.wc.rotationIndex < 0) AppState.wc.rotationIndex = l - 1; this.displayBarcodeManual(); } },
+        displayBarcodeManual: function() {
+            var items = AppState.wc.rotationItems; if (items.length === 0) return;
+            var item = items[AppState.wc.rotationIndex % items.length];
+            var w = (item.weight / 1000).toFixed(3) + ' кг', d = item.prefix === '49' && item.discount !== undefined ? ' | Скидка: ' + item.discount + '%' : '';
+            document.getElementById('wcBarcodeInfo').innerHTML = '<b>PLU:</b> ' + item.plu + ' | <b>Вес:</b> ' + w + d;
+            document.getElementById('wcBarcodeText').textContent = item.code;
+            document.getElementById('wcCarouselCounter').textContent = ((AppState.wc.rotationIndex % items.length) + 1) + '/' + items.length;
+            var svgEl = document.getElementById('wcBarcodeSvg');
+            var wrapperEl = document.querySelector('.barcode-svg-wrapper');
+            Generators.renderBarcode(svgEl, item.code, item.format);
+            // Простая анимация для ручной навигации (без улетания)
+            if (wrapperEl) {
+                wrapperEl.classList.remove('barcode-pulse', 'barcode-static', 'barcode-slide');
+                void wrapperEl.offsetWidth;
+                wrapperEl.classList.add('barcode-slide');
+            }
+            AppState.wc.rotationIndex++;
+        },
         
-        // FIX: Обновлённая функция displayBarcode с резкой вспышкой для сканера
+        // Авто-ротация с анимацией пролёта
         displayBarcode: function() {
             var items = AppState.wc.rotationItems; if (items.length === 0) return;
             var item = items[AppState.wc.rotationIndex % items.length];
             var w = (item.weight / 1000).toFixed(3) + ' кг', d = item.prefix === '49' && item.discount !== undefined ? ' | Скидка: ' + item.discount + '%' : '';
-            
-            // Обновляем текстовую информацию
+
             document.getElementById('wcBarcodeInfo').innerHTML = '<b>PLU:</b> ' + item.plu + ' | <b>Вес:</b> ' + w + d;
             document.getElementById('wcBarcodeText').textContent = item.code;
             document.getElementById('wcCarouselCounter').textContent = ((AppState.wc.rotationIndex % items.length) + 1) + '/' + items.length;
-            
+
             var svgEl = document.getElementById('wcBarcodeSvg');
             var wrapperEl = document.querySelector('.barcode-svg-wrapper');
-            
-            // FIX: Резкая вспышка для сканера - белый оверлей + исчезновение SVG
-            if (wrapperEl) {
-                wrapperEl.classList.remove('flash-overlay');
-                void wrapperEl.offsetWidth;
-                wrapperEl.classList.add('flash-overlay');
-            }
-            
-            if (svgEl) {
-                svgEl.classList.remove('barcode-pulse');
-                void svgEl.offsetWidth;
-                svgEl.classList.add('barcode-pulse');
-            }
-            
-            // Рендерим баркод
+
             Generators.renderBarcode(svgEl, item.code, item.format);
-            
-            AppState.wc.rotationIndex++; 
+
+            // Анимация пролёта (слева-центр-вправо)
+            if (wrapperEl) {
+                wrapperEl.classList.remove('barcode-pulse', 'barcode-static', 'barcode-slide');
+                void wrapperEl.offsetWidth;
+                wrapperEl.classList.add('barcode-pulse');
+            }
+
+            AppState.wc.rotationIndex++;
             AppState.addToHistory({ type: 'WC', code: item.code });
         },
         
@@ -378,16 +400,20 @@ var Controllers = {
             }
         },
         editItemCode: function() {
+            console.log('editItemCode called');
             var f = AppState.getSgFolder();
+            console.log('folder:', f, 'carouselIndex:', AppState.sg.carouselIndex);
             if (f && f.items.length > 0) {
                 var item = f.items[AppState.sg.carouselIndex];
+                console.log('item:', item);
                 var newCode = prompt('Новый код:', item.code);
                 if (newCode !== null && newCode.trim()) {
-                    var result = Generators.generateSimple(newCode.trim(), item.type);
-                    item.code = result.code;
+                    item.code = newCode.trim();
                     Storage.save();
                     UI.renderSgCarousel();
                 }
+            } else {
+                alert('Нет папки или элементов');
             }
         },
         toggleFolderMode: function(force) { var sel = document.getElementById('sgFolderSelect'), inp = document.getElementById('sgFolderInput'), btn = document.getElementById('sgFolderModeBtn'); var isNew = force !== undefined ? force : !AppState.sg.isNewFolderMode; AppState.sg.isNewFolderMode = isNew; if (isNew) { sel.classList.add('d-none'); inp.classList.remove('d-none'); inp.focus(); btn.textContent = '☰'; btn.classList.remove('btn-purple'); btn.classList.add('btn-secondary'); } else { sel.classList.remove('d-none'); inp.classList.add('d-none'); btn.textContent = '＋'; btn.classList.remove('btn-secondary'); btn.classList.add('btn-purple'); } },
@@ -480,7 +506,7 @@ function init() {
     document.getElementById('sgDeleteFolderBtn').onclick = function() { Controllers.SG.deleteFolder(); };
     document.getElementById('sgDeleteItemBtn').onclick = function() { Controllers.SG.deleteItem(); };
     document.getElementById('sgEditNameBtn').onclick = function() { Controllers.SG.renameItem(); };
-    document.getElementById('sgEditCodeBtn').onclick = function() { Controllers.SG.editItemCode(); };
+    document.getElementById('sgEditCodeBtn').onclick = function(e) { e.preventDefault(); e.stopPropagation(); console.log('123 button clicked'); Controllers.SG.editItemCode(); };
     document.getElementById('wcAddToCarousel').onclick = function() { Controllers.WC.addItems(); };
     document.getElementById('wc-select-all').onclick = function() { Controllers.WC.selectAll(); };
     document.getElementById('wc-deselect-all').onclick = function() { Controllers.WC.deselectAll(); };
@@ -504,7 +530,7 @@ function init() {
             if (e.key === 'ArrowRight') Controllers.DM.manualNext();
         }
         var wc = document.getElementById('tab-weightcarousel');
-        if (wc && wc.classList.contains('active') && AppState.wc.isRotating) {
+        if (wc && wc.classList.contains('active') && AppState.wc.rotationItems.length > 0) {
             if (e.key === 'ArrowLeft') Controllers.WC.manualPrev();
             if (e.key === 'ArrowRight') Controllers.WC.manualNext();
         }
