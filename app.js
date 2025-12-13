@@ -1,6 +1,38 @@
 (function(){
 'use strict';
 
+// Реальные GTIN коды для демо-режима (вместо случайных)
+var DEMO_GTINS = [
+    '4811220000307', '4811220000215', '4810206001604', '4810206001598', '4810206001543',
+    '4810099003310', '4810168005436', '4810099003464', '4810099004522', '4810168007157',
+    '4811468003047', '4810322002547', '4810268011436', '4810093009318', '4810099004775',
+    '4810806002230', '4811293001829', '4810806002223', '4810206002076', '4810806002537',
+    '4810439004557', '4810168006853', '4810268007842', '4810405002211', '4810223004695',
+    '4810223010924', '4810223003865', '4810168007829', '4810268011429', '4810405002198',
+    '4810223003728', '4810268011412', '4810168007645', '4810108006837', '4810099007769',
+    '4810099007752', '4810927001020', '4810168007836', '4810168007669', '4810268009037',
+    '4811198003317', '4810206001710', '4810099003600', '4810093002500', '4810099003662',
+    '4810108002372', '4810268008702', '4810099007561', '4810099003150', '4607037122574',
+    '4810206001628', '4810268010828', '4810099004645', '4810099003471', '4811293000808',
+    '4810223003698', '4810268008801', '4810223003773', '4810099008346', '4810099008353',
+    '4810099008438', '4810099008445', '4810223004107', '4810223004190', '4810439001754',
+    '4810065000787', '4810223004060', '4810268011672', '4810268010712', '4810268010613',
+    '4810223004084', '4810223004077', '4810701000126', '4810405002327', '4810099003624',
+    '4810168007843', '4810168007867', '4810268002298', '4810806001493', '4810099004539',
+    '4810099004454', '4810223004022', '4810223004251', '4810806000748', '4810273001446',
+    '4810223004145', '4810108005465', '4810405001412', '4810099003341', '4810021000325',
+    '4810206002090', '4810557006341', '4810099005734', '4810405002976', '4810206001765',
+    '4810168045494', '4811194005575', '4811377000588', '4810223003810', '4810263009032',
+    '4810168007096', '4810168007102', '4810206001666', '4810099004300', '4810268004001',
+    '4811585000035', '4810268012723', '4810439001747', '4810099007103', '4810806002544',
+    '4811220002127', '4810065000893', '4810223004565', '4811269002522', '4810099007783',
+    '4810099007806', '4810223002417', '4810223002738', '4810223004046', '4810223002226',
+    '4811220003209', '4810268005572', '4810767003529', '4810806000137', '4810223003940',
+    '4810099003587', '4810108001726', '4810065001081', '4810206001758', '4811220005418',
+    '4810099004478', '4811234005855'
+];
+var demoGtinIndex = 0;
+
 var AppState = {
     STORAGE_KEY: 'barcode_gen_v5',
     dm: { timerValue: 0.7, remaining: 0.7, timerInterval: null, isRotating: false, rotationList: [], rotationIndex: 0, selectedTemplate: 'type1', generatedCodes: [], codeHistoryIndex: -1, folders: [], selectedFolderId: null, isNewFolderMode: false },
@@ -87,8 +119,8 @@ var Utils = {
 
 var Generators = {
     templates: {
-        type1: { name: 'Тип 1 (Табак/Вода)', generate: function(b) { var gs = String.fromCharCode(29), g = Utils.padBarcode(b); return '01' + g + '21' + Utils.generateSerial('0', 7) + gs + '93' + Utils.randomBase64(4).substring(0, 4); } },
-        type2: { name: 'Тип 2 (Одежда/Обувь)', generate: function(b) { var gs = String.fromCharCode(29), g = Utils.padBarcode(b); return '01' + g + '21' + Utils.generateSerial('5', 13) + gs + '91' + Utils.randomHex(4) + gs + '92' + Utils.randomBase64(44); } }
+        type1: { name: 'Тип 1', generate: function(b) { var gs = String.fromCharCode(29), g = Utils.padBarcode(b); return '01' + g + '21' + Utils.generateSerial('0', 7) + gs + '93' + Utils.randomBase64(4).substring(0, 4); } },
+        type2: { name: 'Тип 2', generate: function(b) { var gs = String.fromCharCode(29), g = Utils.padBarcode(b); return '01' + g + '21' + Utils.generateSerial('5', 13) + gs + '91' + Utils.randomHex(4) + gs + '92' + Utils.randomBase64(44); } }
     },
     barcodeConfigs: {
         code128_19_piece: { prefix: "47", fields: [{ name: "productCode", label: "Код товара (9)", length: 9 }, { name: "discount", label: "Скидка (2)", length: 2 }, { name: "quantity", label: "Кол-во (5)", length: 5 }], format: 'CODE128' },
@@ -97,7 +129,18 @@ var Generators = {
         code128_16_cas: { prefix: "77", fields: [{ name: "productCode", label: "Код товара (6)", length: 6 }, { name: "weight", label: "Вес (7)", length: 7 }], format: 'CODE128', fixedControl: '0' },
         ean13_weight: { prefix: "22", fields: [{ name: "productCode", label: "Код товара (5)", length: 5 }, { name: "weight", label: "Вес (5)", length: 5 }], format: 'EAN13' }
     },
-    generateDM: function(b, t) { var tmpl = this.templates[t || AppState.dm.selectedTemplate], code = tmpl.generate(b || '0' + Utils.randomDigits(13)); AppState.addToHistory({ type: 'DM', code: code }); return { code: code, templateName: tmpl.name }; },
+    generateDM: function(b, t) {
+        var tmpl = this.templates[t || AppState.dm.selectedTemplate];
+        var barcode = b;
+        if (!barcode) {
+            // Используем реальные GTIN из списка вместо случайных цифр
+            barcode = DEMO_GTINS[demoGtinIndex];
+            demoGtinIndex = (demoGtinIndex + 1) % DEMO_GTINS.length;
+        }
+        var code = tmpl.generate(barcode);
+        AppState.addToHistory({ type: 'DM', code: code });
+        return { code: code, templateName: tmpl.name, barcode: barcode };
+    },
     renderDM: function(c, code) { if (!c) return; c.innerHTML = ''; try { var canvas = document.createElement('canvas'); bwipjs.toCanvas(canvas, { bcid: 'datamatrix', text: code, scale: 4, padding: 2 }); c.appendChild(canvas); } catch (e) { c.innerHTML = '<div style="color:red">Ошибка</div>'; } },
     generateWeightBarcode: function(prefix, plu, weight, disc) {
         var code, ctrl, fmt;
@@ -158,9 +201,29 @@ var UI = {
     updateRotationStatus: function() {
         var el = document.getElementById('rotation-status'), folder = AppState.getDmFolder();
         var active = folder ? folder.items.filter(function(x) { return x.active; }) : [];
-        if (el) el.textContent = AppState.dm.isRotating ? '🔄 Ротация: ' + AppState.dm.rotationList.length : folder ? '✓ ' + active.length + ' активно' : 'Создайте папку';
-        var ctrl = document.getElementById('rotation-controls'); if (ctrl) ctrl.className = 'rotation-controls' + (AppState.dm.isRotating ? ' active' : '');
-        var countEl = document.getElementById('selected-count'); if (countEl) countEl.textContent = active.length;
+        var startBtn = document.getElementById('start-btn'), stopBtn = document.getElementById('stop-btn');
+        if (AppState.dm.isRotating) {
+            if (el) el.textContent = '🔄 Ротация: ' + AppState.dm.rotationList.length + ' GTIN';
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn) stopBtn.style.display = 'inline-flex';
+        } else if (active.length > 0) {
+            if (el) el.textContent = '✓ ' + active.length + ' выбрано — готово к запуску';
+            if (startBtn) startBtn.style.display = 'inline-flex';
+            // Показываем кнопку Стоп если идёт просмотр сгенерированных кодов
+            if (stopBtn) stopBtn.style.display = AppState.dm.generatedCodes.length > 0 ? 'inline-flex' : 'none';
+        } else if (folder) {
+            if (el) el.textContent = 'Выберите GTIN для ротации';
+            if (startBtn) startBtn.style.display = 'inline-flex';
+            if (stopBtn) stopBtn.style.display = 'none';
+        } else {
+            if (el) el.textContent = 'Создайте папку';
+            if (startBtn) startBtn.style.display = 'inline-flex';
+            if (stopBtn) stopBtn.style.display = 'none';
+        }
+        var ctrl = document.getElementById('rotation-controls');
+        if (ctrl) ctrl.className = 'rotation-controls' + (AppState.dm.isRotating ? ' active' : '');
+        var countEl = document.getElementById('selected-count');
+        if (countEl) countEl.textContent = active.length;
     },
     renderWcFolders: function() {
         var c = document.getElementById('wcFolderList'); if (!c) return;
@@ -289,11 +352,12 @@ var Controllers = {
                 this.updateBadge(true, dm.rotationList.length);
             } else {
                 result = Generators.generateDM();
-                // Кэшируем и демо-коды для навигации
-                dm.generatedCodes.push({ code: result.code, barcode: 'demo', templateName: 'Демо' });
+                // Кэшируем и демо-коды для навигации с реальным GTIN
+                dm.generatedCodes.push({ code: result.code, barcode: result.barcode, templateName: result.templateName, rotationIdx: dm.generatedCodes.length });
                 dm.codeHistoryIndex = dm.generatedCodes.length - 1;
-                this.hideCodeInfo();
-                this.updateBadge(false);
+                // Показываем информацию о GTIN даже в демо-режиме
+                this.showCodeInfo(result.barcode, result.templateName, dm.codeHistoryIndex + 1, DEMO_GTINS.length);
+                this.updateBadge(true, DEMO_GTINS.length);
             }
             Generators.renderDM(document.getElementById('datamatrix-container'), result.code);
             var codeEl = document.getElementById('current-code'); if (codeEl) { codeEl.textContent = result.code; codeEl.classList.add('flash'); setTimeout(function() { codeEl.classList.remove('flash'); }, 300); }
@@ -307,10 +371,11 @@ var Controllers = {
             var codeEl = document.getElementById('current-code');
             if (codeEl) { codeEl.textContent = cached.code; codeEl.classList.add('flash'); setTimeout(function() { codeEl.classList.remove('flash'); }, 300); }
             // Используем сохранённый rotationIdx и общее количество GTIN
+            var isRotationMode = dm.rotationList.length > 0;
             var displayIdx = cached.rotationIdx !== undefined ? cached.rotationIdx + 1 : index + 1;
-            var total = dm.rotationList.length > 0 ? dm.rotationList.length : dm.generatedCodes.length;
+            var total = isRotationMode ? dm.rotationList.length : DEMO_GTINS.length;
             this.showCodeInfo(cached.barcode, cached.templateName, displayIdx, total);
-            this.updateBadge(true, dm.rotationList.length || dm.generatedCodes.length);
+            this.updateBadge(true, total);
         },
         startTimer: function() {
             var self = this, dm = AppState.dm;
@@ -338,21 +403,23 @@ var Controllers = {
             UI.updateRotationStatus(); this.generateAndDisplay(); this.startTimer();
         },
         stopRotation: function() {
-            AppState.dm.isRotating = false; this.stopTimer();
-            // Не очищаем rotationList и кэш - чтобы можно было листать после остановки
-            document.getElementById('start-btn').style.display = 'inline-flex'; document.getElementById('stop-btn').style.display = 'none';
-            UI.updateRotationStatus();
-            // Показываем инфо о текущем коде из кэша, если он есть
             var dm = AppState.dm;
-            if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex >= 0) {
-                var cached = dm.generatedCodes[dm.codeHistoryIndex];
-                var displayIdx = cached.rotationIdx !== undefined ? cached.rotationIdx + 1 : dm.codeHistoryIndex + 1;
-                var total = dm.rotationList.length > 0 ? dm.rotationList.length : dm.generatedCodes.length;
-                this.showCodeInfo(cached.barcode, cached.templateName, displayIdx, total);
-                this.updateBadge(true, total);
-            } else {
-                this.hideCodeInfo(); this.updateBadge(false);
-            }
+            dm.isRotating = false;
+            this.stopTimer();
+            // Полностью сбрасываем состояние ротации
+            dm.rotationList = [];
+            dm.rotationIndex = 0;
+            dm.generatedCodes = [];
+            dm.codeHistoryIndex = -1;
+            // Показываем кнопку старта, скрываем стоп
+            document.getElementById('start-btn').style.display = 'inline-flex';
+            document.getElementById('stop-btn').style.display = 'none';
+            UI.updateRotationStatus();
+            // Скрываем информацию о коде и возвращаемся в демо-режим
+            this.hideCodeInfo();
+            this.updateBadge(false);
+            // Генерируем свежий демо-код
+            this.generateAndDisplay();
         },
         manualNext: function() {
             var dm = AppState.dm;
@@ -360,7 +427,7 @@ var Controllers = {
             if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex < dm.generatedCodes.length - 1) {
                 this.displayFromCache(dm.codeHistoryIndex + 1);
             } else if (dm.rotationList.length > 0) {
-                // Генерируем новый код на основе следующего GTIN
+                // Генерируем новый код на основе следующего GTIN из папки
                 var item = dm.rotationList[dm.rotationIndex];
                 var result = Generators.generateDM(item.barcode, item.template);
                 var currentRotationIdx = dm.rotationIndex;
@@ -373,8 +440,15 @@ var Controllers = {
                 this.showCodeInfo(item.barcode, result.templateName, currentRotationIdx + 1, dm.rotationList.length);
                 this.updateBadge(true, dm.rotationList.length);
             } else {
-                // Демо-режим - генерируем случайный код
-                this.generateAndDisplay();
+                // Демо-режим - генерируем код из списка DEMO_GTINS
+                var result = Generators.generateDM();
+                dm.generatedCodes.push({ code: result.code, barcode: result.barcode, templateName: result.templateName, rotationIdx: dm.generatedCodes.length });
+                dm.codeHistoryIndex = dm.generatedCodes.length - 1;
+                Generators.renderDM(document.getElementById('datamatrix-container'), result.code);
+                var codeEl = document.getElementById('current-code');
+                if (codeEl) { codeEl.textContent = result.code; codeEl.classList.add('flash'); setTimeout(function() { codeEl.classList.remove('flash'); }, 300); }
+                this.showCodeInfo(result.barcode, result.templateName, dm.codeHistoryIndex + 1, DEMO_GTINS.length);
+                this.updateBadge(true, DEMO_GTINS.length);
             }
         },
         manualPrev: function() {
