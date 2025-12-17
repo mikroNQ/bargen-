@@ -322,7 +322,7 @@
 
         State.wc.remaining = State.wc.timerValue;
 
-        State.wc.timerInterval = setInterval(function() {
+        State.wc.timerInterval = window.setInterval(function() {
             State.wc.remaining -= 0.1;
 
             if (State.wc.remaining <= 0.05) {
@@ -337,7 +337,7 @@
      */
     function stopTimer() {
         if (State.wc.timerInterval) {
-            clearInterval(State.wc.timerInterval);
+            window.clearInterval(State.wc.timerInterval);
             State.wc.timerInterval = null;
         }
     }

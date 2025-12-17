@@ -135,7 +135,7 @@
         updateCountdown();
         togglePlayState(true);
 
-        dm.timerInterval = setInterval(function() {
+        dm.timerInterval = window.setInterval(function() {
             dm.remaining -= 0.1;
 
             if (dm.remaining <= 0.05) {
@@ -154,7 +154,7 @@
         var dm = State.dm;
 
         if (dm.timerInterval) {
-            clearInterval(dm.timerInterval);
+            window.clearInterval(dm.timerInterval);
             dm.timerInterval = null;
         }
 
