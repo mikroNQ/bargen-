@@ -73,7 +73,16 @@
             <div><span class="label">Шаблон:</span> <span class="value" id="info-template">-</span></div>
             <div class="counter" id="info-counter">1/1</div>
         </div>
-        <div id="current-code">-</div>
+        <div class="code-display-section">
+            <div class="code-display-item">
+                <div class="code-label">Основной код:</div>
+                <div id="current-code" class="code-value">-</div>
+            </div>
+            <div class="code-display-item" id="secondary-code-display" style="display:none">
+                <div class="code-label">Вторичный код:</div>
+                <div id="secondary-code-text" class="code-value">-</div>
+            </div>
+        </div>
         <div class="dm-carousel-controls">
             <div class="interval-selector">
                 <button class="interval-btn" data-interval="0.5">0.5</button>
@@ -378,15 +387,21 @@
 
             <hr class="weight-divider">
 
-            <label style="font-weight:700">Скидка:</label>
+            <label style="font-weight:700;margin-bottom:15px">Скидка:</label>
             <div class="weight-mode-switch">
                 <input type="radio" name="gs1DiscountMode" id="gs1DiscFixed" value="fixed" checked><label class="weight-mode-label" for="gs1DiscFixed">Фикс.</label>
                 <input type="radio" name="gs1DiscountMode" id="gs1DiscRandom" value="random"><label class="weight-mode-label" for="gs1DiscRandom">Rand</label>
             </div>
-            <div id="gs1-disc-fixed-group"><input type="number" id="gs1Discount" value="10" min="0" max="99"><div class="hint">%</div></div>
-            <div id="gs1-disc-random-group" class="d-none"><div class="weight-range-row"><input type="number" id="gs1DiscMin" value="5"><span>—</span><input type="number" id="gs1DiscMax" value="30"></div></div>
+            <div class="form-group" id="gs1-disc-fixed-group">
+                <label>Размер скидки</label>
+                <div class="input-with-suffix"><input type="number" id="gs1Discount" value="10" min="0" max="99"><span class="suffix">%</span></div>
+            </div>
+            <div class="form-group d-none" id="gs1-disc-random-group">
+                <label>Диапазон скидки</label>
+                <div class="weight-range-row"><input type="number" id="gs1DiscMin" value="5"><span>—</span><input type="number" id="gs1DiscMax" value="30"></div>
+            </div>
 
-            <div class="form-group"><label>Вариаций</label><input type="number" id="gs1Variations" value="10" min="1" max="100"><div class="hint">На каждый GoodsId</div></div>
+            <div class="form-group" style="margin-top:15px"><label>Вариаций</label><input type="number" id="gs1Variations" value="10" min="1" max="100"><div class="hint">На каждый GoodsId</div></div>
             
             <div class="controls"><button class="btn btn-purple" id="gs1AddItems">Добавить</button></div>
         </div>
@@ -438,7 +453,7 @@
 <script src="js/app/storage.js"></script>
 <script src="js/generators/generators.js"></script>
 <script src="js/ui/ui.js"></script>
-<script src="js/controllers/dm.controller.js"></script>
+<script src="js/controllers/dm.controller.js?v=4"></script>
 <script src="js/controllers/wc.controller.js"></script>
 <script src="js/controllers/sg.controller.js"></script>
 <script src="js/controllers/barcode.controller.js"></script>

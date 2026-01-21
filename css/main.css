@@ -215,6 +215,27 @@ textarea {
     margin-top: 4px;
 }
 
+/* Input with suffix (e.g., percentage) */
+.input-with-suffix {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.input-with-suffix input {
+    padding-right: 35px;
+}
+
+.input-with-suffix .suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    pointer-events: none;
+}
+
 /* ==========================================================================
    5. Buttons
    ========================================================================== */
@@ -685,6 +706,41 @@ textarea {
     font-weight: 700;
 }
 
+.code-display-section {
+    margin: 15px auto;
+    max-width: 90%;
+}
+
+.code-display-item {
+    margin-bottom: 10px;
+}
+
+.code-display-item:last-child {
+    margin-bottom: 0;
+}
+
+.code-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.code-value {
+    font-family: monospace;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--text-light);
+    padding: 12px 16px;
+    border-radius: 50px;
+    word-break: break-all;
+    text-align: center;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+/* Legacy support for old #current-code */
 #current-code {
     font-family: monospace;
     font-size: 11px;
@@ -694,10 +750,8 @@ textarea {
     border-radius: 50px;
     word-break: break-all;
     text-align: center;
-    margin: 15px auto;
     max-height: 60px;
     overflow-y: auto;
-    max-width: 90%;
 }
 
 .dm-visual-row {
