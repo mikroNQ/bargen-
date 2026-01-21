@@ -553,14 +553,21 @@
                 if (e.key === 'ArrowRight') Controllers.WC.manualNext();
             }
 
-            // SimpleGen - arrows when folder open
-            var sgTab = Utils.$('tab-simplegen');
-            var sgCarousel = Utils.$('sg-view-carousel');
-            if (sgTab && sgTab.classList.contains('active') && sgCarousel && sgCarousel.style.display !== 'none') {
-                if (e.key === 'ArrowLeft') Controllers.SG.prev();
-                if (e.key === 'ArrowRight') Controllers.SG.next();
-            }
-        };
+        // SimpleGen - arrows when folder open
+        var sgTab = Utils.$('tab-simplegen');
+        var sgCarousel = Utils.$('sg-view-carousel');
+        if (sgTab && sgTab.classList.contains('active') && sgCarousel && sgCarousel.style.display !== 'none') {
+            if (e.key === 'ArrowLeft') Controllers.SG.prev();
+            if (e.key === 'ArrowRight') Controllers.SG.next();
+        }
+
+        // GS1 Pack - arrows when rotation active or stopped
+        var gs1Tab = Utils.$('tab-gs1pack');
+        if (gs1Tab && gs1Tab.classList.contains('active') && State.gs1.rotationItems.length > 0) {
+            if (e.key === 'ArrowLeft') Controllers.GS1.manualPrev();
+            if (e.key === 'ArrowRight') Controllers.GS1.manualNext();
+        }
+    };
 
         // Page visibility - pause/resume timers
         document.onvisibilitychange = function() {
