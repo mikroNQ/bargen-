@@ -170,6 +170,14 @@
                                 var otherCheckbox = Utils.$(otherId);
                                 if (otherCheckbox) otherCheckbox.checked = false;
                             });
+                        
+                        // Scroll to barcodes with smooth animation
+                        setTimeout(function() {
+                            var codeContainer = Utils.$('code-container');
+                            if (codeContainer) {
+                                Utils.scrollToElement(codeContainer, 100);
+                            }
+                        }, 100); // Small delay to ensure rendering is complete
                     }
                     // Regenerate display
                     Controllers.DM.generateAndDisplay();
