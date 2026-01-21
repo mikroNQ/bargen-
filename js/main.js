@@ -23,6 +23,30 @@
     var Controllers = BarGen.Controllers;
 
     /**
+     * Wait for bwip-js library to load
+     *
+     * @param {Function} callback - Callback to execute when library is ready
+     */
+    function waitForBwipJs(callback) {
+        var maxAttempts = 50; // 5 seconds max
+        var attempts = 0;
+        
+        var checkInterval = setInterval(function() {
+            attempts++;
+            
+            if (typeof global.bwipjs !== 'undefined' && global.bwipjs.toCanvas) {
+                clearInterval(checkInterval);
+                console.log('[BarGen] bwip-js loaded successfully');
+                callback();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                console.error('[BarGen] bwip-js failed to load');
+                callback(); // Try anyway
+            }
+        }, 100);
+    }
+
+    /**
      * Initialize application
      *
      * @description Main initialization function:
@@ -44,6 +68,7 @@
         bindBarcodeEvents();
         bindWeightCarouselEvents();
         bindSimpleGenEvents();
+        bindGs1Events();
         bindGlobalEvents();
 
         // Render initial UI
@@ -53,13 +78,15 @@
         UI.renderWcFolders();
         UI.renderWcItems();
         UI.renderSgFolders();
+        UI.renderGs1Folders();
+        UI.renderGs1Items();
         UI.renderHistory();
 
-        // Start DataMatrix with delay for DOM ready
-        setTimeout(function() {
+        // Start DataMatrix with library check
+        waitForBwipJs(function() {
             Controllers.DM.generateAndDisplay();
             Controllers.DM.startTimer();
-        }, 300);
+        });
 
         console.log('[BarGen v' + BarGen.Config.VERSION + '] Ready');
     }
@@ -382,6 +409,127 @@
             e.preventDefault();
             e.stopPropagation();
             Controllers.SG.editItemCode();
+        });
+    }
+
+    /**
+     * Bind GS1 Pack tab events
+     */
+    function bindGs1Events() {
+        // Add items
+        Utils.on(Utils.$('gs1AddItems'), 'click', function() {
+            Controllers.GS1.addItems();
+        });
+
+        // Folder management
+        Utils.on(Utils.$('gs1-run-folder'), 'click', function() {
+            Controllers.GS1.startRotation();
+        });
+
+        Utils.on(Utils.$('gs1-rename-folder'), 'click', function() {
+            Controllers.GS1.renameFolder();
+        });
+
+        Utils.on(Utils.$('gs1-delete-folder'), 'click', function() {
+            Controllers.GS1.deleteFolder();
+        });
+
+        // Rotation controls
+        Utils.on(Utils.$('gs1-start-btn'), 'click', function() {
+            Controllers.GS1.startRotation();
+        });
+
+        Utils.on(Utils.$('gs1-stop-btn'), 'click', function() {
+            Controllers.GS1.stopRotation();
+        });
+
+        // Navigation
+        Utils.on(Utils.$('gs1PrevBtn'), 'click', function() {
+            Controllers.GS1.manualPrev();
+        });
+
+        Utils.on(Utils.$('gs1NextBtn'), 'click', function() {
+            Controllers.GS1.manualNext();
+        });
+
+        // Bulk actions
+        Utils.on(Utils.$('gs1-select-all'), 'click', function() {
+            Controllers.GS1.selectAll();
+        });
+
+        Utils.on(Utils.$('gs1-deselect-all'), 'click', function() {
+            Controllers.GS1.deselectAll();
+        });
+
+        Utils.on(Utils.$('gs1-clear-selected'), 'click', function() {
+            Controllers.GS1.clearSelected();
+        });
+
+        // Interval buttons
+        Utils.$$$('.gs1-interval-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                Utils.$('gs1-custom-interval').value = btn.dataset.interval;
+                Controllers.GS1.setInterval(parseFloat(btn.dataset.interval));
+
+                Utils.$$$('.gs1-interval-btn').forEach(function(b) {
+                    b.classList.remove('active');
+                });
+                btn.classList.add('active');
+            };
+        });
+
+        Utils.on(Utils.$('gs1-custom-interval'), 'change', function(e) {
+            Controllers.GS1.setInterval(parseFloat(e.target.value));
+        });
+
+        // Product type toggle
+        Utils.$$$('input[name="gs1Type"]').forEach(function(radio) {
+            radio.onchange = function() {
+                var typeEl = document.querySelector('input[name="gs1Type"]:checked');
+                var type = typeEl ? typeEl.value : 'piece';
+
+                // Toggle piece/weight sections
+                if (type === 'piece') {
+                    Utils.$('gs1-piece-section').classList.remove('d-none');
+                    Utils.$('gs1-weight-section').classList.add('d-none');
+                } else {
+                    Utils.$('gs1-piece-section').classList.add('d-none');
+                    Utils.$('gs1-weight-section').classList.remove('d-none');
+                }
+            };
+        });
+
+        // Piece mode toggle (Random/Fixed for piece products)
+        Utils.$$$('input[name="gs1PieceMode"]').forEach(function(radio) {
+            radio.onchange = function() {
+                var modeEl = document.querySelector('input[name="gs1PieceMode"]:checked');
+                var mode = modeEl ? modeEl.value : 'random';
+
+                Utils.$('gs1-random-quantity').classList.toggle('d-none', mode === 'fixed');
+                Utils.$('gs1-fixed-quantity').classList.toggle('d-none', mode !== 'fixed');
+            };
+        });
+
+        // Weight mode toggle (Random/Fixed for weight products)
+        Utils.$$$('input[name="gs1WeightMode"]').forEach(function(radio) {
+            radio.onchange = function() {
+                var modeEl = document.querySelector('input[name="gs1WeightMode"]:checked');
+                var mode = modeEl ? modeEl.value : 'random';
+
+                Utils.$('gs1-random-weight').classList.toggle('d-none', mode === 'fixed');
+                Utils.$('gs1-fixed-weight').classList.toggle('d-none', mode !== 'fixed');
+            };
+        });
+
+        // Discount mode toggle
+        Utils.$$$('input[name="gs1DiscountMode"]').forEach(function(radio) {
+            radio.onchange = function() {
+                var modeEl = document.querySelector('input[name="gs1DiscountMode"]:checked');
+                var mode = modeEl ? modeEl.value : 'fixed';
+
+                Utils.$('gs1-disc-fixed-group').classList.toggle('d-none', mode !== 'fixed');
+                Utils.$('gs1-disc-random-group').classList.toggle('d-none', mode === 'fixed');
+            };
         });
     }
 

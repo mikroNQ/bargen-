@@ -86,6 +86,20 @@
         },
 
         /**
+         * GS1 Pack module state
+         */
+        gs1: {
+            folders: [],
+            selectedFolderId: null,
+            timerValue: Config.DEFAULT_INTERVAL,
+            remaining: Config.DEFAULT_INTERVAL,
+            timerInterval: null,
+            isRotating: false,
+            rotationIndex: 0,
+            rotationItems: []
+        },
+
+        /**
          * Code generation history
          */
         history: {
@@ -163,6 +177,32 @@
     }
 
     /**
+     * Get GS1 Pack folder by ID
+     *
+     * @param {string} [id] - Folder ID (defaults to selected folder)
+     * @returns {Object|null} Folder object or null
+     */
+    function getGs1Folder(id) {
+        var folderId = id || AppState.gs1.selectedFolderId;
+        for (var i = 0; i < AppState.gs1.folders.length; i++) {
+            if (AppState.gs1.folders[i].id === folderId) {
+                return AppState.gs1.folders[i];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get items from current GS1 Pack folder
+     *
+     * @returns {Array} Array of items or empty array
+     */
+    function getGs1FolderItems() {
+        var folder = getGs1Folder();
+        return folder ? folder.items : [];
+    }
+
+    /**
      * Add entry to code generation history
      *
      * @param {Object} entry - History entry
@@ -232,6 +272,8 @@
     global.BarGen.State.getWcFolder = getWcFolder;
     global.BarGen.State.getWcFolderItems = getWcFolderItems;
     global.BarGen.State.getSgFolder = getSgFolder;
+    global.BarGen.State.getGs1Folder = getGs1Folder;
+    global.BarGen.State.getGs1FolderItems = getGs1FolderItems;
     global.BarGen.State.addToHistory = addToHistory;
     global.BarGen.State.clearHistory = clearHistory;
     global.BarGen.State.getNextDemoGtin = getNextDemoGtin;

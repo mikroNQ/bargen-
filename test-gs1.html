@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GS1 Generator Tests</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .test.pass {
+            border-color: #10b981;
+        }
+        .test.fail {
+            border-color: #ef4444;
+        }
+        .test h3 {
+            margin: 0 0 10px 0;
+        }
+        .expected {
+            color: #666;
+            margin: 5px 0;
+        }
+        .actual {
+            color: #000;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        .status {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status.pass {
+            color: #10b981;
+        }
+        .status.fail {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <h1>GS1 Code Generator Tests (согласно ТЗ)</h1>
+    <div id="results"></div>
+
+    <script src="js/app/utils.js"></script>
+    <script src="js/app/config.js"></script>
+    <script src="js/generators/generators.js"></script>
+
+    <script>
+        var Utils = window.BarGen.Utils;
+        var Config = window.BarGen.Config;
+        var Generators = window.BarGen.Generators;
+        var GS = Config.GS1_CONSTANTS.GS_CHAR;
+
+        var tests = [
+            {
+                name: 'Пример 1: Штучный товар, целое количество, без скидки',
+                params: {
+                    goodsId: '123',
+                    type: 'piece',
+                    quantity: 50,
+                    discount: 0
+                },
+                expected: '99MPUC' + GS + '240123' + GS + '3700000050' + GS
+            },
+            {
+                name: 'Пример 2: Штучный товар, дробное количество, со скидкой',
+                params: {
+                    goodsId: '456789',
+                    type: 'piece',
+                    quantity: 12.45,
+                    discount: 10,
+                    uniqueId: 'ABC12345'
+                },
+                // DecimalPosition = 2, так как 12.45 имеет 2 знака после запятой
+                // Quantity_raw = 12.45 * 100 = 1245
+                expected: '99MPUC' + GS + '240456789' + GS + '3700001245' + GS + 
+                         '9810' + GS + '21ABC12345' + GS + '972' + GS
+            },
+            {
+                name: 'Пример 3: Весовой товар, со скидкой',
+                params: {
+                    goodsId: '888777',
+                    type: 'weight',
+                    weight: 500,
+                    discount: 5,
+                    uniqueId: 'XYZ67890'
+                },
+                expected: '99MPUC' + GS + '240888777' + GS + '3103000500' + GS + 
+                         '9805' + GS + '21XYZ67890' + GS
+            },
+            {
+                name: 'Пример 4: Весовой товар, без скидки',
+                params: {
+                    goodsId: '99',
+                    type: 'weight',
+                    weight: 1250,
+                    discount: 0
+                },
+                expected: '99MPUC' + GS + '24099' + GS + '3103001250' + GS
+            },
+            {
+                name: 'Тест 5: Штучный, дробное 1.5 шт, без скидки',
+                params: {
+                    goodsId: '777',
+                    type: 'piece',
+                    quantity: 1.5,
+                    discount: 0
+                },
+                // DecimalPosition = 1, Quantity_raw = 15
+                expected: '99MPUC' + GS + '240777' + GS + '3700000015' + GS + '971' + GS
+            },
+            {
+                name: 'Тест 6: Штучный, 100.123 шт (3 знака), со скидкой 25%',
+                params: {
+                    goodsId: '12345',
+                    type: 'piece',
+                    quantity: 100.123,
+                    discount: 25,
+                    uniqueId: 'TEST1234'
+                },
+                // DecimalPosition = 3, Quantity_raw = 100123
+                expected: '99MPUC' + GS + '24012345' + GS + '3700100123' + GS + 
+                         '9825' + GS + '21TEST1234' + GS + '973' + GS
+            }
+        ];
+
+        function runTests() {
+            var results = document.getElementById('results');
+            var passCount = 0;
+            var failCount = 0;
+
+            tests.forEach(function(test, idx) {
+                try {
+                    var actual = Generators.generateGS1Code(test.params);
+                    var pass = actual === test.expected;
+
+                    if (pass) passCount++;
+                    else failCount++;
+
+                    var div = document.createElement('div');
+                    div.className = 'test ' + (pass ? 'pass' : 'fail');
+                    
+                    // Визуализация разделителей
+                    var expectedVis = test.expected.split(GS).join('<GS>');
+                    var actualVis = actual.split(GS).join('<GS>');
+
+                    div.innerHTML = 
+                        '<h3>Тест ' + (idx + 1) + ': ' + test.name + '</h3>' +
+                        '<div class="expected">Ожидается: <code>' + expectedVis + '</code></div>' +
+                        '<div class="actual">Получено: <code>' + actualVis + '</code></div>' +
+                        '<div class="status ' + (pass ? 'pass' : 'fail') + '">' + 
+                        (pass ? '✓ PASS' : '✗ FAIL') + 
+                        '</div>';
+
+                    results.appendChild(div);
+                } catch (e) {
+                    failCount++;
+                    var div = document.createElement('div');
+                    div.className = 'test fail';
+                    div.innerHTML = 
+                        '<h3>Тест ' + (idx + 1) + ': ' + test.name + '</h3>' +
+                        '<div class="status fail">✗ ERROR: ' + e.message + '</div>';
+                    results.appendChild(div);
+                }
+            });
+
+            // Summary
+            var summary = document.createElement('div');
+            summary.className = 'test ' + (failCount === 0 ? 'pass' : 'fail');
+            summary.innerHTML = 
+                '<h3>Итого</h3>' +
+                '<div>Пройдено: <span class="status pass">' + passCount + '</span></div>' +
+                '<div>Провалено: <span class="status fail">' + failCount + '</span></div>';
+            results.appendChild(summary);
+        }
+
+        // Run tests on load
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

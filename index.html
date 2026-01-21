@@ -21,6 +21,7 @@
         <button class="tab-btn" data-tab="barcode">Весовые</button>
         <button class="tab-btn" data-tab="simplegen">Конструктор</button>
         <button class="tab-btn" data-tab="weightcarousel">Карусель</button>
+        <button class="tab-btn" data-tab="gs1pack">Фасовка GS1</button>
     </div>
 
     <!-- DataMatrix Tab -->
@@ -273,6 +274,120 @@
             <input type="number" id="wc-custom-interval" class="custom-interval-input" step="0.1" min="0.1" value="0.7">
         </div>
     </div>
+
+    <!-- GS1 Pack Tab -->
+    <div id="tab-gs1pack" class="tab-content">
+        <div class="folders-section">
+            <h4>Папки (GS1 Фасовка)</h4>
+            <div class="folder-list" id="gs1FolderList"></div>
+            <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+                <button class="btn btn-primary btn-sm" id="gs1-run-folder">Запуск</button>
+                <button class="btn btn-warning btn-sm" id="gs1-rename-folder">✎</button>
+                <button class="btn btn-danger btn-sm" id="gs1-delete-folder">×</button>
+            </div>
+        </div>
+        <div class="gs1-form">
+            <div class="form-group"><label>Название папки</label><input type="text" id="gs1FolderName" placeholder="Товары со скидкой..."></div>
+            <div class="form-group"><label>GoodsId коды (по одному на строку)</label><textarea id="gs1GoodsIds" placeholder="123&#10;456789&#10;99" style="height:70px"></textarea></div>
+            
+            <label style="font-weight:700;margin-bottom:15px">Тип товара:</label>
+            <div class="weight-mode-switch" style="margin-bottom:20px">
+                <input type="radio" name="gs1Type" id="gs1TypePiece" value="piece" checked><label class="weight-mode-label" for="gs1TypePiece">Штучный</label>
+                <input type="radio" name="gs1Type" id="gs1TypeWeight" value="weight"><label class="weight-mode-label" for="gs1TypeWeight">Весовой</label>
+            </div>
+
+            <!-- Секция для штучного товара -->
+            <div id="gs1-piece-section">
+                <label style="font-weight:700;margin-bottom:15px">Количество штук:</label>
+                <div class="weight-mode-switch">
+                    <input type="radio" name="gs1PieceMode" id="gs1PieceRandom" value="random" checked><label class="weight-mode-label" for="gs1PieceRandom">Random</label>
+                    <input type="radio" name="gs1PieceMode" id="gs1PieceFixed" value="fixed"><label class="weight-mode-label" for="gs1PieceFixed">Фикс.</label>
+                </div>
+
+                <div class="form-group" id="gs1-random-quantity">
+                    <label>Диапазон кол-ва</label>
+                    <div class="weight-range-row">
+                        <input type="number" id="gs1QuantityMin" value="1" step="0.01">
+                        <span>—</span>
+                        <input type="number" id="gs1QuantityMax" value="100" step="0.01">
+                    </div>
+                </div>
+                <div class="form-group d-none" id="gs1-fixed-quantity">
+                    <label>Фикс. количество</label>
+                    <input type="number" id="gs1FixedQuantity" value="50" step="0.01">
+                </div>
+            </div>
+
+            <!-- Секция для весового товара -->
+            <div id="gs1-weight-section" class="d-none">
+                <label style="font-weight:700;margin-bottom:15px">Вес товара:</label>
+                <div class="weight-mode-switch">
+                    <input type="radio" name="gs1WeightMode" id="gs1WeightRandom" value="random" checked><label class="weight-mode-label" for="gs1WeightRandom">Random</label>
+                    <input type="radio" name="gs1WeightMode" id="gs1WeightFixed" value="fixed"><label class="weight-mode-label" for="gs1WeightFixed">Фикс.</label>
+                </div>
+
+                <div class="form-group" id="gs1-random-weight">
+                    <label>Диапазон веса (г)</label>
+                    <div class="weight-range-row">
+                        <input type="number" id="gs1WeightMin" value="100">
+                        <span>—</span>
+                        <input type="number" id="gs1WeightMax" value="5000">
+                    </div>
+                </div>
+                <div class="form-group d-none" id="gs1-fixed-weight">
+                    <label>Фикс. вес (г)</label>
+                    <input type="number" id="gs1FixedWeight" value="500">
+                </div>
+            </div>
+
+            <hr class="weight-divider">
+
+            <label style="font-weight:700">Скидка:</label>
+            <div class="weight-mode-switch">
+                <input type="radio" name="gs1DiscountMode" id="gs1DiscFixed" value="fixed" checked><label class="weight-mode-label" for="gs1DiscFixed">Фикс.</label>
+                <input type="radio" name="gs1DiscountMode" id="gs1DiscRandom" value="random"><label class="weight-mode-label" for="gs1DiscRandom">Rand</label>
+            </div>
+            <div id="gs1-disc-fixed-group"><input type="number" id="gs1Discount" value="10" min="0" max="99"><div class="hint">%</div></div>
+            <div id="gs1-disc-random-group" class="d-none"><div class="weight-range-row"><input type="number" id="gs1DiscMin" value="5"><span>—</span><input type="number" id="gs1DiscMax" value="30"></div></div>
+
+            <div class="form-group"><label>Вариаций</label><input type="number" id="gs1Variations" value="10" min="1" max="100"><div class="hint">На каждый GoodsId</div></div>
+            
+            <div class="controls"><button class="btn btn-purple" id="gs1AddItems">Добавить</button></div>
+        </div>
+        <div class="bulk-actions">
+            <span style="flex:1;font-size:.8em;color:var(--text-light)">В папке: <strong id="gs1-items-count">0</strong> <span id="gs1-current-folder-name"></span></span>
+            <button class="btn btn-outline btn-sm" id="gs1-select-all">Все</button>
+            <button class="btn btn-outline btn-sm" id="gs1-deselect-all">Снять</button>
+            <button class="btn btn-danger btn-sm" id="gs1-clear-selected">×</button>
+        </div>
+        <div class="weight-items-list" id="gs1ItemsList"></div>
+        <div class="rotation-controls" id="gs1-rotation-controls">
+            <div id="gs1-rotation-status">Создайте папку</div>
+            <div style="margin-top:10px;display:flex;justify-content:center;gap:10px">
+                <button class="btn btn-success btn-sm" id="gs1-start-btn">Старт</button>
+                <button class="btn btn-warning btn-sm" id="gs1-stop-btn" style="display:none">Стоп</button>
+            </div>
+        </div>
+        <div class="gs1-carousel-display" id="gs1CarouselDisplay" style="display:none">
+            <div id="gs1CodeInfo">-</div>
+            <div id="gs1CodeText" style="font-size:.7em;word-break:break-all;color:var(--text-secondary);margin:5px 0 30px 0">-</div>
+            <div class="gs1-qr-wrapper">
+                <div id="gs1QRContainer"></div>
+            </div>
+            <div id="gs1CarouselCounter">1/1</div>
+            <div class="gs1-carousel-nav">
+                <button class="gs1-arrow-btn" id="gs1PrevBtn">❮</button>
+                <button class="gs1-arrow-btn" id="gs1NextBtn">❯</button>
+            </div>
+        </div>
+        <div class="interval-selector">
+            <button class="gs1-interval-btn" data-interval="0.5">0.5</button>
+            <button class="gs1-interval-btn active" data-interval="0.7">0.7</button>
+            <button class="gs1-interval-btn" data-interval="1">1</button>
+            <button class="gs1-interval-btn" data-interval="2">2</button>
+            <input type="number" id="gs1-custom-interval" class="custom-interval-input" step="0.1" min="0.1" value="0.7">
+        </div>
+    </div>
 </div>
 </div>
 
@@ -293,6 +408,7 @@
 <script src="js/controllers/barcode.controller.js"></script>
 <script src="js/controllers/tab.controller.js"></script>
 <script src="js/controllers/library.controller.js"></script>
+<script src="js/controllers/gs1.controller.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

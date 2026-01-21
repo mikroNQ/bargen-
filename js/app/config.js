@@ -210,6 +210,44 @@
         fixed: 0
     };
 
+    /**
+     * GS1 format constants
+     * @type {Object}
+     */
+    var GS1_CONSTANTS = {
+        GS_CHAR: String.fromCharCode(29), // ASCII 29 separator
+        PREFIX: '99MPUC',
+        AI_GOODS_ID: '240',
+        AI_QUANTITY: '37',
+        AI_WEIGHT: '3103',
+        AI_DISCOUNT: '98',
+        AI_UNIQUE_ID: '21',
+        AI_DECIMAL_POS: '97'
+    };
+
+    /**
+     * GS1 defaults for quantity/weight/discount
+     * @type {Object}
+     */
+    var GS1_DEFAULTS = {
+        quantity: {
+            min: 1,
+            max: 99999999,
+            fixed: 50
+        },
+        weight: {
+            min: 100,
+            max: 999999,
+            fixed: 500
+        },
+        discount: {
+            min: 0,
+            max: 99,
+            fixed: 10
+        },
+        variations: 10
+    };
+
     // Export to namespace
     global.BarGen.Config = {
         VERSION: VERSION,
@@ -221,7 +259,9 @@
         BARCODE_CONFIGS: BARCODE_CONFIGS,
         SIMPLE_FORMATS: SIMPLE_FORMATS,
         WEIGHT_DEFAULTS: WEIGHT_DEFAULTS,
-        DISCOUNT_DEFAULTS: DISCOUNT_DEFAULTS
+        DISCOUNT_DEFAULTS: DISCOUNT_DEFAULTS,
+        GS1_CONSTANTS: GS1_CONSTANTS,
+        GS1_DEFAULTS: GS1_DEFAULTS
     };
 
 })(window);

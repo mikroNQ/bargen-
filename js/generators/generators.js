@@ -216,6 +216,150 @@
     }
 
     /**
+     * Generate unique ID for GS1 (AI 21)
+     *
+     * @description Generates 8-character alphanumeric ID
+     * @returns {string} 8-character unique ID
+     *
+     * @example
+     * generateUniqueId() // 'ABC12345'
+     */
+    function generateUniqueId() {
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        var id = '';
+        for (var i = 0; i < 8; i++) {
+            id += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return id;
+    }
+
+    /**
+     * Calculate decimal position from quantity
+     *
+     * @description Determines how many decimal places are in a number
+     * @param {number} quantity - Quantity value
+     * @returns {number} Decimal position (0-3)
+     *
+     * @example
+     * calculateDecimalPosition(12.45) // 2
+     * calculateDecimalPosition(50) // 0
+     */
+    function calculateDecimalPosition(quantity) {
+        var str = quantity.toString();
+        var dotIndex = str.indexOf('.');
+        if (dotIndex === -1) return 0;
+        return str.length - dotIndex - 1;
+    }
+
+    /**
+     * Generate GS1 code
+     *
+     * @description Generates GS1 format barcode string according to specification
+     * Format: 99MPUC<GS>240[GoodsId]<GS>37[Qty]|3103[Weight]<GS>98[Disc]<GS>21[UniqueID]<GS>97[DecPos]<GS>
+     *
+     * @param {Object} params - Parameters object
+     * @param {string} params.goodsId - Product ID (1-8 digits)
+     * @param {string} params.type - Product type ('piece' or 'weight')
+     * @param {number} [params.quantity] - Quantity for piece goods
+     * @param {number} [params.weight] - Weight in grams for weight goods
+     * @param {number} [params.discount=0] - Discount percentage (0-99)
+     * @param {string} [params.uniqueId] - Unique ID (auto-generated if discount > 0)
+     * @param {number} [params.decimalPosition] - Decimal position (auto-calculated)
+     * @returns {string} GS1 format code
+     *
+     * @example
+     * generateGS1Code({
+     *   goodsId: '123',
+     *   type: 'piece',
+     *   quantity: 12.45,
+     *   discount: 10
+     * })
+     * // '99MPUC<GS>240123<GS>3700001245<GS>9810<GS>21ABC12345<GS>972<GS>'
+     */
+    function generateGS1Code(params) {
+        var GS = Config.GS1_CONSTANTS.GS_CHAR;
+        var code = Config.GS1_CONSTANTS.PREFIX + GS;
+
+        // AI 240 - GoodsId (1-8 символов, только цифры)
+        var goodsId = (params.goodsId || '').replace(/\D/g, '').substring(0, 8);
+        if (!goodsId) {
+            throw new Error('GoodsId is required');
+        }
+        code += Config.GS1_CONSTANTS.AI_GOODS_ID + goodsId + GS;
+
+        // Определение типа товара и добавление соответствующего AI
+        if (params.type === 'piece') {
+            // AI 37 - Quantity (8 цифр с ведущими нулями)
+            var quantity = params.quantity || 0;
+            var decimalPosition = params.decimalPosition !== undefined 
+                ? params.decimalPosition 
+                : calculateDecimalPosition(quantity);
+            
+            var qtyRaw = Math.floor(quantity * Math.pow(10, decimalPosition));
+            code += Config.GS1_CONSTANTS.AI_QUANTITY + Utils.padZeros(qtyRaw, 8) + GS;
+            
+            // AI 98 - Discount (опционально)
+            if (params.discount > 0) {
+                code += Config.GS1_CONSTANTS.AI_DISCOUNT + Utils.padZeros(params.discount, 2) + GS;
+                
+                // AI 21 - UniqueID (обязателен при скидке)
+                var uniqueId = params.uniqueId || generateUniqueId();
+                code += Config.GS1_CONSTANTS.AI_UNIQUE_ID + uniqueId + GS;
+            }
+            
+            // AI 97 - Decimal position (только если есть дробная часть)
+            if (decimalPosition > 0) {
+                code += Config.GS1_CONSTANTS.AI_DECIMAL_POS + decimalPosition + GS;
+            }
+        } else if (params.type === 'weight') {
+            // AI 3103 - Weight в граммах (6 цифр)
+            var weight = params.weight || 0;
+            code += Config.GS1_CONSTANTS.AI_WEIGHT + Utils.padZeros(weight, 6) + GS;
+            
+            // AI 98 - Discount (опционально)
+            if (params.discount > 0) {
+                code += Config.GS1_CONSTANTS.AI_DISCOUNT + Utils.padZeros(params.discount, 2) + GS;
+                
+                // AI 21 - UniqueID (обязателен при скидке)
+                var uniqueId2 = params.uniqueId || generateUniqueId();
+                code += Config.GS1_CONSTANTS.AI_UNIQUE_ID + uniqueId2 + GS;
+            }
+        } else {
+            throw new Error('Invalid type: must be "piece" or "weight"');
+        }
+
+        return code;
+    }
+
+    /**
+     * Render GS1 QR code
+     *
+     * @description Renders QR code using bwip-js library
+     * @param {HTMLElement} container - Container element for canvas
+     * @param {string} code - GS1 code to encode
+     */
+    function renderGS1QR(container, code) {
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        try {
+            var canvas = document.createElement('canvas');
+            // @ts-ignore - bwipjs is loaded externally
+            bwipjs.toCanvas(canvas, {
+                bcid: 'qrcode',
+                text: code,
+                scale: 3,
+                eclevel: 'M'
+            });
+            container.appendChild(canvas);
+        } catch (e) {
+            container.innerHTML = '<div style="color:red">Ошибка генерации QR</div>';
+            console.error('[BarGen Generators] QR code render error:', e);
+        }
+    }
+
+    /**
      * Generate barcode from config
      *
      * @description Used by Barcode tab to generate codes based on BARCODE_CONFIGS
@@ -278,7 +422,11 @@
         generateWeightBarcode: generateWeightBarcode,
         renderBarcode: renderBarcode,
         generateSimple: generateSimple,
-        generateFromConfig: generateFromConfig
+        generateFromConfig: generateFromConfig,
+        generateGS1Code: generateGS1Code,
+        renderGS1QR: renderGS1QR,
+        generateUniqueId: generateUniqueId,
+        calculateDecimalPosition: calculateDecimalPosition
     };
 
 })(window);

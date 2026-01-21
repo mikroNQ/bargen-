@@ -467,6 +467,131 @@
         renderDmItems();
     }
 
+    /**
+     * Render GS1 Pack folders list
+     */
+    function renderGs1Folders() {
+        var container = Utils.$('gs1FolderList');
+        if (!container) return;
+
+        if (State.gs1.folders.length === 0) {
+            container.innerHTML = '<div class="empty-state">Нет папок</div>';
+        } else {
+            var fragment = document.createDocumentFragment();
+
+            State.gs1.folders.forEach(function(folder) {
+                var div = document.createElement('div');
+                div.className = 'folder-item' + (folder.id === State.gs1.selectedFolderId ? ' selected' : '');
+
+                div.innerHTML = '<div>📦</div><div style="flex:1"><b>' + Utils.escapeHtml(folder.name) +
+                    '</b><div style="font-size:.8em;color:#666">' + folder.items.length + ' шт</div></div>';
+
+                div.onclick = function() {
+                    State.gs1.selectedFolderId = folder.id;
+                    renderGs1Folders();
+                    renderGs1Items();
+                };
+
+                fragment.appendChild(div);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(fragment);
+        }
+
+        // Update folder name badge
+        var nameEl = Utils.$('gs1-current-folder-name');
+        var folder = State.getGs1Folder();
+        if (nameEl) {
+            nameEl.innerHTML = folder ?
+                '<span class="current-folder-badge">📦 ' + Utils.escapeHtml(folder.name) + '</span>' : '';
+        }
+    }
+
+    /**
+     * Render GS1 Pack items list
+     */
+    function renderGs1Items() {
+        var container = Utils.$('gs1ItemsList');
+        var items = State.getGs1FolderItems();
+        var countEl = Utils.$('gs1-items-count');
+
+        if (countEl) countEl.textContent = items.length;
+        if (!container) return;
+
+        if (items.length === 0) {
+            container.innerHTML = '<div class="empty-state">Выберите папку</div>';
+        } else {
+            var fragment = document.createDocumentFragment();
+
+            items.forEach(function(item) {
+                var div = document.createElement('div');
+                div.className = 'weight-item' + (item.active ? ' active' : '');
+
+                var typeLabel = item.type === 'piece' ? 'Штучн' : 'Весов';
+                var valueText = item.type === 'piece' ? 
+                    item.quantity + ' шт' : 
+                    Utils.formatWeight(item.weight);
+                var discountText = item.discount > 0 ? ' | ' + item.discount + '%' : '';
+                var barcodeIcon = item.showBarcode ? ' 📊' : '';
+
+                div.innerHTML = '<div class="info"><div class="code" style="font-size:.7em">' + 
+                    item.code.substring(0, 30) + '...' +
+                    '</div><div style="font-size:.8em;color:#666">ID: ' + item.goodsId + ' | ' +
+                    valueText + ' | ' + typeLabel + discountText + barcodeIcon + '</div></div>' +
+                    '<div style="display:flex;gap:8px">' +
+                    '<button class="btn btn-sm ' + (item.active ? 'btn-success' : 'btn-outline') +
+                    '" data-action="toggle">' + (item.active ? '✓' : '○') + '</button>' +
+                    '<button class="btn btn-sm btn-danger" data-action="delete">✕</button></div>';
+
+                div.querySelector('[data-action="toggle"]').onclick = function() {
+                    item.active = !item.active;
+                    global.BarGen.Storage.save();
+                    renderGs1Items();
+                };
+
+                div.querySelector('[data-action="delete"]').onclick = function() {
+                    var folder = State.getGs1Folder();
+                    if (folder) {
+                        folder.items = folder.items.filter(function(x) { return x.id !== item.id; });
+                        global.BarGen.Storage.save();
+                        renderGs1Items();
+                    }
+                };
+
+                fragment.appendChild(div);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(fragment);
+        }
+
+        updateGs1Status();
+    }
+
+    /**
+     * Update GS1 rotation status
+     */
+    function updateGs1Status() {
+        var statusEl = Utils.$('gs1-rotation-status');
+        if (!statusEl) return;
+
+        var folder = State.getGs1Folder();
+        if (!folder) {
+            statusEl.textContent = 'Создайте папку';
+            return;
+        }
+
+        var active = folder.items.filter(function(x) { return x.active; });
+        
+        if (State.gs1.isRotating) {
+            statusEl.innerHTML = '<span class="rotating">▶ Ротация: ' + 
+                active.length + ' ' + (active.length === 1 ? 'код' : 'кодов') + '</span>';
+        } else {
+            statusEl.innerHTML = 'Выбрано: <b>' + active.length + '</b> из ' + folder.items.length;
+        }
+    }
+
     // Export to namespace
     global.BarGen.UI = {
         // DataMatrix
@@ -483,6 +608,11 @@
         // Simple Generator
         renderSgFolders: renderSgFolders,
         renderSgCarousel: renderSgCarousel,
+
+        // GS1 Pack
+        renderGs1Folders: renderGs1Folders,
+        renderGs1Items: renderGs1Items,
+        updateGs1Status: updateGs1Status,
 
         // Barcode
         renderBarcodeFields: renderBarcodeFields,

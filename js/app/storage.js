@@ -41,6 +41,7 @@
                 State.dm.folders = parsed.dmFolders || [];
                 State.wc.folders = parsed.wcFolders || [];
                 State.sg.folders = parsed.sgFolders || [];
+                State.gs1.folders = parsed.gs1Folders || [];
                 State.history.items = parsed.history || [];
             }
 
@@ -71,6 +72,7 @@
                 dmFolders: State.dm.folders,
                 wcFolders: State.wc.folders,
                 sgFolders: State.sg.folders,
+                gs1Folders: State.gs1.folders,
                 history: State.history.items
             };
             localStorage.setItem(Config.STORAGE_KEY, JSON.stringify(data));
@@ -92,6 +94,7 @@
             dmFolders: State.dm.folders,
             wcFolders: State.wc.folders,
             sgFolders: State.sg.folders,
+            gs1Folders: State.gs1.folders,
             history: State.history.items
         };
 
@@ -130,6 +133,7 @@
                     State.dm.folders = data.dmFolders || [];
                     State.wc.folders = data.wcFolders || [];
                     State.sg.folders = data.sgFolders || [];
+                    State.gs1.folders = data.gs1Folders || [];
                     State.history.items = data.history || [];
 
                     save();
