@@ -234,6 +234,29 @@
     }
 
     /**
+     * Extract EAN13 from GTIN used in DataMatrix
+     *
+     * @description Extracts GTIN from AI 01 in DataMatrix code and converts to EAN13
+     * @param {string} dmCode - DataMatrix code with AI 01
+     * @returns {string|null} EAN13 barcode (13 digits) or null if no GTIN found
+     *
+     * @example
+     * extractEAN13FromDM('010481009900331021...') // '4810099003310'
+     */
+    function extractEAN13FromDM(dmCode) {
+        // Extract GTIN from AI 01 (14 digits)
+        var ai01Match = dmCode.match(/01(\d{14})/);
+        if (!ai01Match) return null;
+
+        var gtin14 = ai01Match[1];
+        // Convert GTIN-14 to EAN-13 (remove first digit, recalculate check)
+        var ean12 = gtin14.substring(1, 13);
+        var checkDigit = Utils.calcControlEAN13(ean12);
+
+        return ean12 + checkDigit;
+    }
+
+    /**
      * Calculate decimal position from quantity
      *
      * @description Determines how many decimal places are in a number
@@ -426,7 +449,8 @@
         generateGS1Code: generateGS1Code,
         renderGS1QR: renderGS1QR,
         generateUniqueId: generateUniqueId,
-        calculateDecimalPosition: calculateDecimalPosition
+        calculateDecimalPosition: calculateDecimalPosition,
+        extractEAN13FromDM: extractEAN13FromDM
     };
 
 })(window);

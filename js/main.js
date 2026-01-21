@@ -156,6 +156,26 @@
                 State.dm.selectedTemplate = btn.dataset.template;
             };
         });
+
+        // Double scan checkboxes - ensure only one is selected at a time
+        ['doubleScanSameDM', 'doubleScanDmEan', 'doubleScanSameEan', 'doubleScanDifferentDM'].forEach(function(id) {
+            var checkbox = Utils.$(id);
+            if (checkbox) {
+                checkbox.onchange = function() {
+                    if (this.checked) {
+                        // Uncheck other checkboxes
+                        ['doubleScanSameDM', 'doubleScanDmEan', 'doubleScanSameEan', 'doubleScanDifferentDM']
+                            .filter(function(otherId) { return otherId !== id; })
+                            .forEach(function(otherId) {
+                                var otherCheckbox = Utils.$(otherId);
+                                if (otherCheckbox) otherCheckbox.checked = false;
+                            });
+                    }
+                    // Regenerate display
+                    Controllers.DM.generateAndDisplay();
+                };
+            }
+        });
     }
 
     /**

@@ -449,12 +449,23 @@ textarea {
    8. DataMatrix Section
    ========================================================================== */
 #code-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 220px;
+    margin: 0 auto;
+}
+
+#primary-code-container {
     background: #fff;
     border-radius: 20px;
     padding: 20px;
-    text-align: center;
-    max-width: 220px;
-    margin: 0 auto;
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -472,6 +483,76 @@ textarea {
     width: 90% !important;
     height: 90% !important;
     object-fit: contain;
+}
+
+/* Double scan settings */
+.double-scan-settings {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid var(--glass-border);
+}
+
+.double-scan-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.double-scan-options .checkbox-row {
+    margin: 0;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.double-scan-options .checkbox-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Secondary code container */
+#secondary-code-container {
+    background: #efefef;
+    border-radius: 20px;
+    padding: 20px;
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+#datamatrix-container-2 {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border-radius: 16px;
+    max-width: 220px;
+}
+
+#datamatrix-container-2 canvas {
+    width: 90% !important;
+    height: 90% !important;
+    object-fit: contain;
+}
+
+#ean13-barcode {
+    width: 100%;
+    height: auto;
+    max-width: 220px;
+}
+
+#primary-code-container svg {
+    width: 100%;
+    height: auto;
+    max-width: 220px;
+    display: block;
+    margin: 0 auto;
 }
 
 .mode-badge {

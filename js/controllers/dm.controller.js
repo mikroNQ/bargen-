@@ -33,6 +33,10 @@
     function generateAndDisplay() {
         var dm = State.dm;
         var result, barcode;
+        var secondaryResult = null;
+
+        // Определить режим двойного сканирования
+        var doubleScanMode = getActiveDoubleScanMode();
 
         if (dm.isRotating && dm.rotationList.length > 0) {
             // Rotation mode: use items from folder
@@ -70,8 +74,61 @@
             updateBadge(true, Config.DEMO_GTINS.length);
         }
 
-        // Render DataMatrix
-        Generators.renderDM(Utils.$('datamatrix-container'), result.code);
+        // Generate secondary code if double scan enabled
+        if (doubleScanMode) {
+            switch (doubleScanMode) {
+                case 'sameDM':
+                    secondaryResult = {
+                        type: 'DM',
+                        code: result.code,
+                        barcode: barcode
+                    };
+                    break;
+                case 'dmEan':
+                    var ean13 = Generators.extractEAN13FromDM(result.code);
+                    secondaryResult = {
+                        type: 'EAN13',
+                        code: ean13
+                    };
+                    break;
+                case 'sameEan':
+                    var ean13_1 = Generators.extractEAN13FromDM(result.code);
+                    var ean13_2 = Generators.extractEAN13FromDM(result.code);
+                    // Primary as EAN13
+                    result.displayAsEan = true;
+                    result.ean13Code = ean13_1;
+                    // Secondary as EAN13
+                    secondaryResult = {
+                        type: 'EAN13',
+                        code: ean13_2
+                    };
+                    break;
+                case 'differentDM':
+                    // Generate second DM with next GTIN
+                    var nextBarcode = dm.isRotating ? 
+                        dm.rotationList[(dm.rotationIndex) % dm.rotationList.length].barcode :
+                        State.getNextDemoGtin();
+                    var templateId = dm.isRotating ? 
+                        dm.rotationList[(dm.rotationIndex - 1 + dm.rotationList.length) % dm.rotationList.length].template :
+                        dm.selectedTemplate;
+                    var result2 = Generators.generateDM(nextBarcode, templateId);
+                    secondaryResult = {
+                        type: 'DM',
+                        code: result2.code,
+                        barcode: nextBarcode
+                    };
+                    break;
+            }
+        }
+
+        // Render codes
+        renderPrimaryCode(result);
+        if (secondaryResult) {
+            renderSecondaryCode(secondaryResult);
+            showSecondaryContainer();
+        } else {
+            hideSecondaryContainer();
+        }
 
         // Update code text with flash animation
         var codeEl = Utils.$('current-code');
@@ -365,6 +422,91 @@
         } else {
             badge.className = 'mode-badge default';
             badge.style.display = 'none';
+        }
+    }
+
+    /**
+     * Get active double scan mode from checkboxes
+     * 
+     * @returns {string|null} Active mode or null
+     */
+    function getActiveDoubleScanMode() {
+        if (Utils.$('doubleScanSameDM') && Utils.$('doubleScanSameDM').checked) return 'sameDM';
+        if (Utils.$('doubleScanDmEan') && Utils.$('doubleScanDmEan').checked) return 'dmEan';
+        if (Utils.$('doubleScanSameEan') && Utils.$('doubleScanSameEan').checked) return 'sameEan';
+        if (Utils.$('doubleScanDifferentDM') && Utils.$('doubleScanDifferentDM').checked) return 'differentDM';
+        return null;
+    }
+
+    /**
+     * Render primary code (DM or EAN13)
+     * 
+     * @param {Object} result - Result object from generator
+     */
+    function renderPrimaryCode(result) {
+        var container = Utils.$('primary-code-container');
+        if (!container) return;
+
+        var existingSvg = container.querySelector('svg');
+        var dmContainer = Utils.$('datamatrix-container');
+
+        if (result.displayAsEan) {
+            // Show EAN13 instead of DataMatrix
+            var svg = existingSvg;
+            if (!svg) {
+                svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.id = 'primary-ean13-barcode';
+                container.appendChild(svg);
+            }
+            dmContainer.style.display = 'none';
+            svg.style.display = 'block';
+            Generators.renderBarcode(svg, result.ean13Code, 'EAN13');
+        } else {
+            // Show DataMatrix
+            dmContainer.style.display = 'flex';
+            if (existingSvg) {
+                existingSvg.style.display = 'none';
+            }
+            Generators.renderDM(dmContainer, result.code);
+        }
+    }
+
+    /**
+     * Render secondary code (DM or EAN13)
+     * 
+     * @param {Object} secondary - Secondary code object
+     */
+    function renderSecondaryCode(secondary) {
+        if (!secondary) return;
+
+        if (secondary.type === 'DM') {
+            Utils.$('datamatrix-container-2').style.display = 'flex';
+            Utils.$('ean13-barcode').style.display = 'none';
+            Generators.renderDM(Utils.$('datamatrix-container-2'), secondary.code);
+        } else if (secondary.type === 'EAN13') {
+            Utils.$('datamatrix-container-2').style.display = 'none';
+            Utils.$('ean13-barcode').style.display = 'block';
+            Generators.renderBarcode(Utils.$('ean13-barcode'), secondary.code, 'EAN13');
+        }
+    }
+
+    /**
+     * Show secondary container
+     */
+    function showSecondaryContainer() {
+        var container = Utils.$('secondary-code-container');
+        if (container) {
+            container.style.display = 'block';
+        }
+    }
+
+    /**
+     * Hide secondary container
+     */
+    function hideSecondaryContainer() {
+        var container = Utils.$('secondary-code-container');
+        if (container) {
+            container.style.display = 'none';
         }
     }
 

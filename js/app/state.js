@@ -53,7 +53,12 @@
             codeHistoryIndex: -1,
             folders: [],
             selectedFolderId: null,
-            isNewFolderMode: false
+            isNewFolderMode: false,
+            doubleScan: {
+                enabled: false,
+                mode: null, // 'sameDM' | 'dmEan' | 'sameEan' | 'differentDM'
+                selectedModes: [] // массив активных режимов для ротации
+            }
         },
 
         /**

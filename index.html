@@ -27,7 +27,39 @@
     <!-- DataMatrix Tab -->
     <div id="tab-datamatrix" class="tab-content active">
         <div id="mode-indicator"><span class="mode-badge default" id="mode-badge">Демо</span></div>
-        <div id="code-container"><div id="datamatrix-container"></div></div>
+        
+        <!-- Настройки двойного сканирования -->
+        <div class="double-scan-settings" style="margin-bottom:15px">
+            <label style="font-weight:700;margin-bottom:10px">Двойное сканирование:</label>
+            <div class="double-scan-options">
+                <label class="checkbox-row">
+                    <input type="checkbox" id="doubleScanSameDM">
+                    <span>Одинаковый СИ + Одинаковый СИ</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" id="doubleScanDmEan">
+                    <span>СИ + ШК</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" id="doubleScanSameEan">
+                    <span>ШК + ШК</span>
+                </label>
+                <label class="checkbox-row">
+                    <input type="checkbox" id="doubleScanDifferentDM">
+                    <span>Разные СИ1 + СИ2</span>
+                </label>
+            </div>
+        </div>
+        
+        <div id="code-container">
+            <div id="primary-code-container">
+                <div id="datamatrix-container"></div>
+            </div>
+            <div id="secondary-code-container" style="display:none;margin-top:20px">
+                <div id="datamatrix-container-2"></div>
+                <svg id="ean13-barcode" style="display:none"></svg>
+            </div>
+        </div>
         <div class="dm-carousel-nav" id="dm-nav-arrows" style="display:none">
             <button id="dm-prev-btn" class="dm-arrow-btn">❮</button>
             <button id="dm-next-btn" class="dm-arrow-btn">❯</button>
