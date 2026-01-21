@@ -350,10 +350,8 @@
     function manualPrev() {
         if (State.gs1.rotationItems.length > 0) {
             var len = State.gs1.rotationItems.length;
-            State.gs1.rotationIndex = (State.gs1.rotationIndex - 2 + len) % len;
-            if (State.gs1.rotationIndex < 0) {
-                State.gs1.rotationIndex = len - 1;
-            }
+            // Декремент с учётом того, что displayCodeManual() увеличивает индекс
+            State.gs1.rotationIndex = (State.gs1.rotationIndex - 2 + len * 100) % len;
             displayCodeManual();
         }
     }

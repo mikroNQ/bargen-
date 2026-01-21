@@ -43,35 +43,11 @@
             var item = dm.rotationList[dm.rotationIndex];
             barcode = item.barcode;
             result = Generators.generateDM(barcode, item.template);
-
-            // Cache generated code
             var currentRotationIdx = dm.rotationIndex;
-            dm.generatedCodes.push({
-                code: result.code,
-                barcode: barcode,
-                templateName: result.templateName,
-                rotationIdx: currentRotationIdx
-            });
-            dm.codeHistoryIndex = dm.generatedCodes.length - 1;
             dm.rotationIndex = (dm.rotationIndex + 1) % dm.rotationList.length;
-
-            showCodeInfo(barcode, result.templateName, currentRotationIdx + 1, dm.rotationList.length);
-            updateBadge(true, dm.rotationList.length);
         } else {
             // Demo mode
             result = Generators.generateDM();
-
-            // Cache demo codes too
-            dm.generatedCodes.push({
-                code: result.code,
-                barcode: result.barcode,
-                templateName: result.templateName,
-                rotationIdx: dm.generatedCodes.length
-            });
-            dm.codeHistoryIndex = dm.generatedCodes.length - 1;
-
-            showCodeInfo(result.barcode, result.templateName, dm.codeHistoryIndex + 1, Config.DEMO_GTINS.length);
-            updateBadge(true, Config.DEMO_GTINS.length);
         }
 
         // Generate secondary code if double scan enabled
@@ -121,6 +97,38 @@
             }
         }
 
+        // Cache generated code (after secondary code generation)
+        if (dm.isRotating && dm.rotationList.length > 0) {
+            dm.generatedCodes.push({
+                code: result.code,
+                barcode: barcode,
+                templateName: result.templateName,
+                rotationIdx: currentRotationIdx,
+                doubleScanMode: doubleScanMode,
+                primaryDisplayAsEan: result.displayAsEan || false,
+                secondaryCode: secondaryResult
+            });
+            dm.codeHistoryIndex = dm.generatedCodes.length - 1;
+
+            showCodeInfo(barcode, result.templateName, currentRotationIdx + 1, dm.rotationList.length);
+            updateBadge(true, dm.rotationList.length);
+        } else {
+            // Cache demo codes too
+            dm.generatedCodes.push({
+                code: result.code,
+                barcode: result.barcode,
+                templateName: result.templateName,
+                rotationIdx: dm.generatedCodes.length,
+                doubleScanMode: doubleScanMode,
+                primaryDisplayAsEan: result.displayAsEan || false,
+                secondaryCode: secondaryResult
+            });
+            dm.codeHistoryIndex = dm.generatedCodes.length - 1;
+
+            showCodeInfo(result.barcode, result.templateName, dm.codeHistoryIndex + 1, Config.DEMO_GTINS.length);
+            updateBadge(true, Config.DEMO_GTINS.length);
+        }
+
         // Render codes
         renderPrimaryCode(result);
         if (secondaryResult) {
@@ -131,14 +139,7 @@
         }
 
         // Update code text with flash animation
-        var codeEl = Utils.$('current-code');
-        if (codeEl) {
-            codeEl.textContent = result.code;
-            codeEl.classList.add('flash');
-            setTimeout(function() {
-                codeEl.classList.remove('flash');
-            }, 300);
-        }
+        updateCodeText(result.code, secondaryResult)
     }
 
     /**
@@ -154,16 +155,24 @@
         var cached = dm.generatedCodes[index];
         dm.codeHistoryIndex = index;
 
-        Generators.renderDM(Utils.$('datamatrix-container'), cached.code);
+        // Restore primary code display
+        var primaryResult = {
+            code: cached.code,
+            displayAsEan: cached.primaryDisplayAsEan,
+            ean13Code: cached.primaryDisplayAsEan ? Generators.extractEAN13FromDM(cached.code) : null
+        };
+        renderPrimaryCode(primaryResult);
 
-        var codeEl = Utils.$('current-code');
-        if (codeEl) {
-            codeEl.textContent = cached.code;
-            codeEl.classList.add('flash');
-            setTimeout(function() {
-                codeEl.classList.remove('flash');
-            }, 300);
+        // Restore secondary code if exists
+        if (cached.doubleScanMode && cached.secondaryCode) {
+            renderSecondaryCode(cached.secondaryCode);
+            showSecondaryContainer();
+        } else {
+            hideSecondaryContainer();
         }
+
+        // Update code text
+        updateCodeText(cached.code, cached.secondaryCode)
 
         // Update info display
         var isRotationMode = dm.rotationList.length > 0;
@@ -301,44 +310,39 @@
     function manualNext() {
         var dm = State.dm;
 
+        // In rotation mode, check if all codes have been generated at least once
+        if (dm.rotationList.length > 0 && dm.generatedCodes.length >= dm.rotationList.length) {
+            // All codes from rotation list have been generated, cycle through history
+            var nextIndex = (dm.codeHistoryIndex + 1) % dm.rotationList.length;
+            displayFromCache(nextIndex);
+            return;
+        }
+
         // If viewing history, show next from cache
         if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex < dm.generatedCodes.length - 1) {
             displayFromCache(dm.codeHistoryIndex + 1);
-        } else if (dm.rotationList.length > 0) {
-            // Rotation mode: check if all GTINs generated
-            if (dm.generatedCodes.length >= dm.rotationList.length) {
-                return; // All done
+        } else {
+            // At the end of history - check if we can generate more
+            if (dm.rotationList.length > 0) {
+                // Rotation mode: check if all unique GTINs already generated at least once
+                // Count unique rotation indices in generated codes
+                var uniqueIndices = {};
+                for (var i = 0; i < dm.generatedCodes.length; i++) {
+                    if (dm.generatedCodes[i].rotationIdx !== undefined) {
+                        uniqueIndices[dm.generatedCodes[i].rotationIdx] = true;
+                    }
+                }
+                var uniqueCount = Object.keys(uniqueIndices).length;
+                
+                if (uniqueCount >= dm.rotationList.length) {
+                    // All unique codes generated, cycle back to start
+                    displayFromCache(0);
+                    return;
+                }
             }
-
-            // Generate new code
-            var item = dm.rotationList[dm.rotationIndex];
-            var result = Generators.generateDM(item.barcode, item.template);
-            var currentRotationIdx = dm.rotationIndex;
-
-            dm.generatedCodes.push({
-                code: result.code,
-                barcode: item.barcode,
-                templateName: result.templateName,
-                rotationIdx: currentRotationIdx
-            });
-            dm.codeHistoryIndex = dm.generatedCodes.length - 1;
-            dm.rotationIndex = (dm.rotationIndex + 1) % dm.rotationList.length;
-
-            Generators.renderDM(Utils.$('datamatrix-container'), result.code);
-
-            var codeEl = Utils.$('current-code');
-            if (codeEl) {
-                codeEl.textContent = result.code;
-                codeEl.classList.add('flash');
-                setTimeout(function() {
-                    codeEl.classList.remove('flash');
-                }, 300);
-            }
-
-            showCodeInfo(item.barcode, result.templateName, currentRotationIdx + 1, dm.rotationList.length);
-            updateBadge(true, dm.rotationList.length);
+            // Generate new code (rotation or demo mode)
+            generateAndDisplay();
         }
-        // Demo mode: no infinite generation on manual nav
     }
 
     /**
@@ -346,6 +350,16 @@
      */
     function manualPrev() {
         var dm = State.dm;
+
+        // In rotation mode with full history, cycle backwards
+        if (dm.rotationList.length > 0 && dm.generatedCodes.length >= dm.rotationList.length) {
+            var prevIndex = dm.codeHistoryIndex - 1;
+            if (prevIndex < 0) {
+                prevIndex = dm.rotationList.length - 1;
+            }
+            displayFromCache(prevIndex);
+            return;
+        }
 
         // Navigate back in cache if possible
         if (dm.generatedCodes.length > 0 && dm.codeHistoryIndex > 0) {
@@ -396,7 +410,12 @@
         Utils.$('code-info').style.display = 'block';
         Utils.$('info-barcode').textContent = barcode;
         Utils.$('info-template').textContent = templateName;
-        Utils.$('info-counter').textContent = (index === 0 ? total : index) + '/' + total;
+        // Ensure index doesn't exceed total in rotation mode
+        var displayIndex = index;
+        if (displayIndex > total) {
+            displayIndex = ((displayIndex - 1) % total) + 1;
+        }
+        Utils.$('info-counter').textContent = (displayIndex === 0 ? total : displayIndex) + '/' + total;
     }
 
     /**
@@ -507,6 +526,39 @@
         var container = Utils.$('secondary-code-container');
         if (container) {
             container.style.display = 'none';
+        }
+    }
+
+    /**
+     * Update code text display with flash animation
+     * 
+     * @param {string} primaryCode - Primary code text
+     * @param {Object|null} secondaryCode - Secondary code object or null
+     */
+    function updateCodeText(primaryCode, secondaryCode) {
+        var primaryEl = Utils.$('current-code');
+        var secondaryEl = Utils.$('secondary-code-text');
+        var secondaryDisplay = Utils.$('secondary-code-display');
+
+        // Update primary code
+        if (primaryEl) {
+            primaryEl.textContent = primaryCode;
+            primaryEl.classList.add('flash');
+            setTimeout(function() {
+                primaryEl.classList.remove('flash');
+            }, 300);
+        }
+
+        // Update secondary code display
+        if (secondaryCode && secondaryEl && secondaryDisplay) {
+            secondaryEl.textContent = secondaryCode.code;
+            secondaryDisplay.style.display = 'block';
+            secondaryEl.classList.add('flash');
+            setTimeout(function() {
+                secondaryEl.classList.remove('flash');
+            }, 300);
+        } else if (secondaryDisplay) {
+            secondaryDisplay.style.display = 'none';
         }
     }
 

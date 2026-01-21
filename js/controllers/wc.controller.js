@@ -306,10 +306,8 @@
     function manualPrev() {
         if (State.wc.rotationItems.length > 0) {
             var len = State.wc.rotationItems.length;
-            State.wc.rotationIndex = (State.wc.rotationIndex - 2 + len) % len;
-            if (State.wc.rotationIndex < 0) {
-                State.wc.rotationIndex = len - 1;
-            }
+            // Декремент с учётом того, что displayBarcodeManual() увеличивает индекс
+            State.wc.rotationIndex = (State.wc.rotationIndex - 2 + len * 100) % len;
             displayBarcodeManual();
         }
     }
