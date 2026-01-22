@@ -50,6 +50,23 @@
             result = Generators.generateDM();
         }
 
+        // Check if "Broken DataMatrix" checkbox is enabled
+        var brokenDmCheckbox = Utils.$('brokenDataMatrix');
+        if (brokenDmCheckbox && brokenDmCheckbox.checked) {
+            // Get selected break method
+            var selectedMethod = 'removeChars'; // default
+            var methodRadios = document.getElementsByName('brokenDmType');
+            for (var i = 0; i < methodRadios.length; i++) {
+                if (methodRadios[i].checked) {
+                    selectedMethod = methodRadios[i].value;
+                    break;
+                }
+            }
+            
+            // Apply the break method to the code
+            result.code = Generators.breakDataMatrix(result.code, selectedMethod);
+        }
+
         // Generate secondary code if double scan enabled
         if (doubleScanMode) {
             switch (doubleScanMode) {

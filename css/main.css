@@ -624,6 +624,53 @@ textarea {
     }
 }
 
+/* Nested options for checkboxes */
+.nested-options {
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 2px solid var(--primary);
+    padding: 12px;
+    margin-top: 12px;
+    margin-left: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+/* Radio button styles (styled as checkboxes but circular) */
+.custom-checkbox-label.radio-label input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.custom-checkbox-label.radio-label input[type="radio"] + .custom-checkbox-checkmark {
+    border-radius: 50%;
+}
+
+.custom-checkbox-label.radio-label input[type="radio"]:checked + .custom-checkbox-checkmark {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.custom-checkbox-label.radio-label input[type="radio"]:checked + .custom-checkbox-checkmark::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: none;
+}
+
+.custom-checkbox-label.radio-label:has(input:checked) {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
 /* Secondary code container */
 #secondary-code-container {
     background: #efefef;

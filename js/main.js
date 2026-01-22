@@ -158,13 +158,25 @@
         });
 
         // Double scan checkboxes - ensure only one is selected at a time
-        ['doubleScanSameDM', 'doubleScanDmEan', 'doubleScanSameEan', 'doubleScanDifferentDM'].forEach(function(id) {
+        var doubleScanIds = ['doubleScanSameDM', 'doubleScanDmEan', 'doubleScanSameEan', 'doubleScanDifferentDM'];
+        var brokenDmCheckbox = Utils.$('brokenDataMatrix');
+        
+        doubleScanIds.forEach(function(id) {
             var checkbox = Utils.$(id);
             if (checkbox) {
                 checkbox.onchange = function() {
                     if (this.checked) {
-                        // Uncheck other checkboxes
-                        ['doubleScanSameDM', 'doubleScanDmEan', 'doubleScanSameEan', 'doubleScanDifferentDM']
+                        // Uncheck "Broken DataMatrix" if any double scan is enabled
+                        if (brokenDmCheckbox) {
+                            brokenDmCheckbox.checked = false;
+                            var brokenDmOptions = Utils.$('brokenDmOptions');
+                            if (brokenDmOptions) {
+                                brokenDmOptions.style.display = 'none';
+                            }
+                        }
+                        
+                        // Uncheck other double scan checkboxes
+                        doubleScanIds
                             .filter(function(otherId) { return otherId !== id; })
                             .forEach(function(otherId) {
                                 var otherCheckbox = Utils.$(otherId);
@@ -184,6 +196,40 @@
                 };
             }
         });
+
+        // Broken DataMatrix checkbox - toggle nested options
+        var brokenDmOptions = Utils.$('brokenDmOptions');
+        
+        if (brokenDmCheckbox && brokenDmOptions) {
+            brokenDmCheckbox.onchange = function() {
+                if (this.checked) {
+                    // Uncheck all double scan checkboxes when Broken DM is enabled
+                    doubleScanIds.forEach(function(id) {
+                        var checkbox = Utils.$(id);
+                        if (checkbox) checkbox.checked = false;
+                    });
+                    
+                    brokenDmOptions.style.display = 'block';
+                } else {
+                    brokenDmOptions.style.display = 'none';
+                }
+                // Regenerate display with or without break
+                Controllers.DM.generateAndDisplay();
+            };
+        }
+
+        // Broken DataMatrix method radio buttons - regenerate on change
+        var brokenDmRadios = document.getElementsByName('brokenDmType');
+        if (brokenDmRadios) {
+            for (var i = 0; i < brokenDmRadios.length; i++) {
+                brokenDmRadios[i].onchange = function() {
+                    // Only regenerate if checkbox is checked
+                    if (brokenDmCheckbox && brokenDmCheckbox.checked) {
+                        Controllers.DM.generateAndDisplay();
+                    }
+                };
+            }
+        }
     }
 
     /**

@@ -54,6 +54,47 @@
                 </label>
             </div>
         </div>
+
+        <!-- Сломанный DataMatrix -->
+        <div class="double-scan-settings" style="margin-bottom:15px">
+            <label class="custom-checkbox-label">
+                <input type="checkbox" id="brokenDataMatrix">
+                <span class="custom-checkbox-checkmark"></span>
+                <span class="custom-checkbox-text">Сломанный DataMatrix</span>
+            </label>
+
+            <!-- Вложенные опции поломки -->
+            <div id="brokenDmOptions" class="nested-options" style="display:none;">
+                <label style="font-size:0.85em; color:var(--text-light); margin-bottom:8px; display:block; font-weight:600;">
+                    Тип поломки:
+                </label>
+                <label class="custom-checkbox-label radio-label" style="margin-bottom:5px;">
+                    <input type="radio" name="brokenDmType" value="removeChars" checked>
+                    <span class="custom-checkbox-checkmark"></span>
+                    <span class="custom-checkbox-text" style="font-size:0.9em;">Удалить символы</span>
+                </label>
+                <label class="custom-checkbox-label radio-label" style="margin-bottom:5px;">
+                    <input type="radio" name="brokenDmType" value="wrongChecksum">
+                    <span class="custom-checkbox-checkmark"></span>
+                    <span class="custom-checkbox-text" style="font-size:0.9em;">Испортить контрольную цифру</span>
+                </label>
+                <label class="custom-checkbox-label radio-label" style="margin-bottom:5px;">
+                    <input type="radio" name="brokenDmType" value="replaceGS">
+                    <span class="custom-checkbox-checkmark"></span>
+                    <span class="custom-checkbox-text" style="font-size:0.9em;">Заменить GS символы</span>
+                </label>
+                <label class="custom-checkbox-label radio-label" style="margin-bottom:5px;">
+                    <input type="radio" name="brokenDmType" value="addJunk">
+                    <span class="custom-checkbox-checkmark"></span>
+                    <span class="custom-checkbox-text" style="font-size:0.9em;">Добавить мусорные символы</span>
+                </label>
+                <label class="custom-checkbox-label radio-label">
+                    <input type="radio" name="brokenDmType" value="random">
+                    <span class="custom-checkbox-checkmark"></span>
+                    <span class="custom-checkbox-text" style="font-size:0.9em;">Случайный способ</span>
+                </label>
+            </div>
+        </div>
         
         <div id="code-container">
             <div id="primary-code-container">
