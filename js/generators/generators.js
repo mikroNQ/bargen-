@@ -264,16 +264,16 @@
      * 
      * @param {string} code - Original DataMatrix code
      * @param {string} [method='removeChars'] - Break method: 
-     *   'removeChars' - Remove 1-3 random characters
-     *   'wrongChecksum' - Corrupt the GTIN check digit
-     *   'replaceGS' - Replace GS separators with visible characters
-     *   'addJunk' - Add random junk characters
+     *   'removeChars' - Remove 5-10 random characters
+     *   'wrongChecksum' - Corrupt multiple GTIN digits (30% of digits)
+     *   'replaceGS' - Replace GS separators with ||| symbols
+     *   'addJunk' - Add 10-15 random junk characters
      *   'random' - Use random method each time
      * @returns {string} Broken code
      * 
      * @example
      * breakDataMatrix('010481009900331021...', 'removeChars')
-     * // Returns code with 2 characters removed
+     * // Returns code with 5-10 characters removed
      */
     function breakDataMatrix(code, method) {
         if (!code) return code;
@@ -289,47 +289,58 @@
         
         switch (breakMethod) {
             case 'removeChars':
-                // Remove 1-3 random characters
-                var removeCount = Math.floor(Math.random() * 3) + 1;
-                var position = Math.floor(Math.random() * (code.length - removeCount));
+                // Remove 5-10 random characters for more visible damage
+                var removeCount = Math.floor(Math.random() * 6) + 5; // 5-10 chars
+                var maxPos = Math.max(0, code.length - removeCount);
+                var position = Math.floor(Math.random() * maxPos);
                 brokenCode = code.slice(0, position) + code.slice(position + removeCount);
                 console.log('[BarGen Generators] Breaking DM: removed ' + removeCount + ' chars at pos ' + position);
+                console.log('[BarGen Generators] Original length: ' + code.length + ', New length: ' + brokenCode.length);
                 break;
                 
             case 'wrongChecksum':
-                // Corrupt the GTIN check digit in AI 01
+                // Corrupt the GTIN check digit and other digits in AI 01
                 if (code.indexOf('01') === 0 && code.length >= 16) {
-                    var wrongDigit = (parseInt(code.charAt(15)) + Math.floor(Math.random() * 9) + 1) % 10;
-                    brokenCode = code.slice(0, 15) + wrongDigit + code.slice(16);
-                    console.log('[BarGen Generators] Breaking DM: corrupted checksum digit');
-                } else {
-                    // If no AI 01 found, change a random digit
-                    var digitPos = -1;
-                    for (var i = 0; i < code.length; i++) {
-                        if (/\d/.test(code[i])) {
-                            digitPos = i;
-                            break;
+                    // Change multiple digits in GTIN for more visible damage
+                    var gtinPart = code.substring(2, 16);
+                    var corruptedGtin = '';
+                    for (var k = 0; k < gtinPart.length; k++) {
+                        if (Math.random() < 0.3 && /\d/.test(gtinPart[k])) {
+                            corruptedGtin += (parseInt(gtinPart[k]) + Math.floor(Math.random() * 9) + 1) % 10;
+                        } else {
+                            corruptedGtin += gtinPart[k];
                         }
                     }
-                    if (digitPos >= 0) {
-                        var newDigit = (parseInt(code.charAt(digitPos)) + 5) % 10;
-                        brokenCode = code.slice(0, digitPos) + newDigit + code.slice(digitPos + 1);
-                        console.log('[BarGen Generators] Breaking DM: corrupted digit at pos ' + digitPos);
+                    brokenCode = '01' + corruptedGtin + code.slice(16);
+                    console.log('[BarGen Generators] Breaking DM: corrupted multiple GTIN digits');
+                    console.log('[BarGen Generators] Original: ' + code.substring(0, 16));
+                    console.log('[BarGen Generators] Corrupted: ' + brokenCode.substring(0, 16));
+                } else {
+                    // If no AI 01 found, change multiple random digits
+                    brokenCode = '';
+                    for (var i = 0; i < code.length; i++) {
+                        if (/\d/.test(code[i]) && Math.random() < 0.2) {
+                            brokenCode += (parseInt(code[i]) + 5) % 10;
+                        } else {
+                            brokenCode += code[i];
+                        }
                     }
+                    console.log('[BarGen Generators] Breaking DM: corrupted random digits');
                 }
                 break;
                 
             case 'replaceGS':
-                // Replace GS separator characters (0x1D) with visible pipe symbols
+                // Replace GS separator characters (0x1D) with visible pipe symbols and add extra noise
                 var gsCount = (code.match(/\x1D/g) || []).length;
-                brokenCode = code.replace(/\x1D/g, '|');
-                console.log('[BarGen Generators] Breaking DM: replaced ' + gsCount + ' GS separators');
+                brokenCode = code.replace(/\x1D/g, '|||'); // Triple pipes for more visible damage
+                console.log('[BarGen Generators] Breaking DM: replaced ' + gsCount + ' GS separators with |||');
+                console.log('[BarGen Generators] Original length: ' + code.length + ', New length: ' + brokenCode.length);
                 break;
                 
             case 'addJunk':
-                // Add 2-4 random junk characters at random position
+                // Add 10-15 random junk characters at random position for more visible damage
                 var junkChars = 'XYZQW!@#$%&*';
-                var junkCount = Math.floor(Math.random() * 3) + 2;
+                var junkCount = Math.floor(Math.random() * 6) + 10; // 10-15 chars
                 var junk = '';
                 for (var j = 0; j < junkCount; j++) {
                     junk += junkChars.charAt(Math.floor(Math.random() * junkChars.length));
@@ -337,6 +348,7 @@
                 var insertPos = Math.floor(Math.random() * code.length);
                 brokenCode = code.slice(0, insertPos) + junk + code.slice(insertPos);
                 console.log('[BarGen Generators] Breaking DM: added "' + junk + '" at pos ' + insertPos);
+                console.log('[BarGen Generators] Original length: ' + code.length + ', New length: ' + brokenCode.length);
                 break;
                 
             default:
