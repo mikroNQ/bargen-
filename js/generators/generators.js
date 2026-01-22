@@ -313,28 +313,17 @@
         // Определение типа товара и добавление соответствующего AI
         if (params.type === 'piece') {
             // AI 37 - Quantity (8 цифр с ведущими нулями)
+            // По ТЗ: передаём фактическое количество, используем AI 97 для дробной части
             var quantity = params.quantity || 0;
             
-            // ВАЖНО: Проверяем наличие measureDiv
-            if (params.measureDiv && params.measureDiv !== 1) {
-                // Товар с коэффициентом фасовки
-                // Передаём ЦЕЛОЕ количество порций БЕЗ AI 97
-                var portions = Math.round(quantity);
-                code += Config.GS1_CONSTANTS.AI_QUANTITY + Utils.padZeros(portions, 8) + GS;
-            } else {
-                // Обычный товар - с возможной дробной частью и AI 97
-                var decimalPosition = params.decimalPosition !== undefined 
-                    ? params.decimalPosition 
-                    : calculateDecimalPosition(quantity);
-                
-                var qtyRaw = Math.round(quantity * Math.pow(10, decimalPosition));
-                code += Config.GS1_CONSTANTS.AI_QUANTITY + Utils.padZeros(qtyRaw, 8) + GS;
-                
-                // AI 97 - Decimal position (только если есть дробная часть)
-                if (decimalPosition > 0) {
-                    // AI 97 добавляется в конце, после AI 98 и AI 21
-                }
-            }
+            // Вычисляем позицию десятичной точки
+            var decimalPosition = params.decimalPosition !== undefined 
+                ? params.decimalPosition 
+                : calculateDecimalPosition(quantity);
+            
+            // Преобразуем в сырое значение: quantity * 10^decimalPosition
+            var qtyRaw = Math.round(quantity * Math.pow(10, decimalPosition));
+            code += Config.GS1_CONSTANTS.AI_QUANTITY + Utils.padZeros(qtyRaw, 8) + GS;
             
             // AI 98 - Discount (опционально)
             if (params.discount > 0) {
@@ -345,14 +334,9 @@
                 code += Config.GS1_CONSTANTS.AI_UNIQUE_ID + uniqueId + GS;
             }
             
-            // AI 97 - Decimal position (только если нет measureDiv и есть дробная часть)
-            if (!params.measureDiv || params.measureDiv === 1) {
-                var decPos = params.decimalPosition !== undefined 
-                    ? params.decimalPosition 
-                    : calculateDecimalPosition(quantity);
-                if (decPos > 0) {
-                    code += Config.GS1_CONSTANTS.AI_DECIMAL_POS + decPos + GS;
-                }
+            // AI 97 - Decimal position (только если есть дробная часть)
+            if (decimalPosition > 0) {
+                code += Config.GS1_CONSTANTS.AI_DECIMAL_POS + decimalPosition + GS;
             }
         } else if (params.type === 'weight') {
             // AI 3103 - Weight в граммах (6 цифр)

@@ -10,6 +10,79 @@
             padding: 20px;
             background: #f5f5f5;
         }
+        .test-gen {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #6366f1;
+        }
+        .test-gen h2 {
+            margin: 0 0 15px 0;
+            color: #6366f1;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            align-items: center;
+        }
+        .form-row label {
+            width: 120px;
+        }
+        .form-row input, .form-row select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .result-box {
+            background: #f0f9ff;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+            border: 1px solid #0ea5e9;
+        }
+        .result-box h4 {
+            margin: 0 0 10px 0;
+        }
+        .code-display {
+            font-size: 14px;
+            word-break: break-all;
+            margin: 5px 0;
+        }
+        .hex-display {
+            font-size: 11px;
+            color: #666;
+            margin: 5px 0;
+        }
+        .segment {
+            background: #fef3c7;
+            padding: 2px 4px;
+            margin: 2px;
+            display: inline-block;
+            border-radius: 2px;
+        }
+        .gs-marker {
+            background: #ef4444;
+            color: white;
+            padding: 2px 6px;
+            margin: 0 2px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
         .test {
             background: white;
             padding: 15px;
@@ -17,42 +90,75 @@
             border-radius: 8px;
             border: 2px solid #ddd;
         }
-        .test.pass {
-            border-color: #10b981;
+        .test.pass { border-color: #10b981; }
+        .test.fail { border-color: #ef4444; }
+        .test h3 { margin: 0 0 10px 0; }
+        .expected { color: #666; margin: 5px 0; }
+        .actual { color: #000; margin: 5px 0; word-break: break-all; }
+        .status { font-weight: bold; margin-top: 10px; }
+        .status.pass { color: #10b981; }
+        .status.fail { color: #ef4444; }
+        #qr-container {
+            margin-top: 15px;
+            text-align: center;
         }
-        .test.fail {
-            border-color: #ef4444;
-        }
-        .test h3 {
-            margin: 0 0 10px 0;
-        }
-        .expected {
-            color: #666;
-            margin: 5px 0;
-        }
-        .actual {
-            color: #000;
-            margin: 5px 0;
-            word-break: break-all;
-        }
-        .status {
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .status.pass {
-            color: #10b981;
-        }
-        .status.fail {
-            color: #ef4444;
+        #qr-container canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
-    <h1>GS1 Code Generator Tests (согласно ТЗ)</h1>
+    <h1>GS1 Code Generator - Тестирование</h1>
+    
+    <!-- Интерактивный генератор -->
+    <div class="test-gen">
+        <h2>Генератор для тестирования</h2>
+        <div class="form-row">
+            <label>GoodsId:</label>
+            <input type="text" id="gen-goodsId" value="880">
+        </div>
+        <div class="form-row">
+            <label>Тип:</label>
+            <select id="gen-type">
+                <option value="piece">Штучный</option>
+                <option value="weight">Весовой</option>
+            </select>
+        </div>
+        <div class="form-row" id="row-quantity">
+            <label>Количество:</label>
+            <input type="number" id="gen-quantity" value="0.5" step="0.001">
+        </div>
+        <div class="form-row" id="row-weight" style="display:none">
+            <label>Вес (г):</label>
+            <input type="number" id="gen-weight" value="500">
+        </div>
+        <div class="form-row">
+            <label>Скидка %:</label>
+            <input type="number" id="gen-discount" value="50" min="0" max="99">
+        </div>
+        <button onclick="generateTest()">Сгенерировать</button>
+        
+        <div class="result-box" id="gen-result" style="display:none">
+            <h4>Результат:</h4>
+            <div class="code-display" id="res-visual"></div>
+            <div class="code-display"><strong>Raw:</strong> <span id="res-raw"></span></div>
+            <div class="hex-display"><strong>HEX:</strong> <span id="res-hex"></span></div>
+            <div style="margin-top:10px">
+                <strong>Парсинг по ТЗ:</strong>
+                <div id="res-parsed"></div>
+            </div>
+            <div id="qr-container"></div>
+        </div>
+    </div>
+
+    <h2>Автоматические тесты (по ТЗ)</h2>
     <div id="results"></div>
 
+    <script src="https://unpkg.com/bwip-js@3.0.4/dist/bwip-js-min.js"></script>
     <script src="js/app/utils.js"></script>
     <script src="js/app/config.js"></script>
+    <script src="js/app/state.js"></script>
     <script src="js/generators/generators.js"></script>
 
     <script>
@@ -61,126 +167,178 @@
         var Generators = window.BarGen.Generators;
         var GS = Config.GS1_CONSTANTS.GS_CHAR;
 
+        // Toggle quantity/weight based on type
+        document.getElementById('gen-type').addEventListener('change', function() {
+            var isPiece = this.value === 'piece';
+            document.getElementById('row-quantity').style.display = isPiece ? 'flex' : 'none';
+            document.getElementById('row-weight').style.display = isPiece ? 'none' : 'flex';
+        });
+
+        function toHex(str) {
+            var hex = '';
+            for (var i = 0; i < str.length; i++) {
+                var code = str.charCodeAt(i);
+                hex += code.toString(16).toUpperCase().padStart(2, '0') + ' ';
+            }
+            return hex;
+        }
+
+        function visualize(code) {
+            var parts = code.split(GS);
+            var html = '';
+            parts.forEach(function(part, idx) {
+                if (part) {
+                    html += '<span class="segment">' + part + '</span>';
+                }
+                if (idx < parts.length - 1) {
+                    html += '<span class="gs-marker">&lt;GS&gt;</span>';
+                }
+            });
+            return html;
+        }
+
+        function parseGS1(code) {
+            var segments = code.split(GS);
+            var result = {};
+            
+            segments.forEach(function(seg) {
+                if (seg.startsWith('99MPUC')) {
+                    result.prefix = '99MPUC';
+                } else if (seg.startsWith('240')) {
+                    result.goodsId = seg.substring(3);
+                } else if (seg.startsWith('37')) {
+                    result.quantityRaw = parseInt(seg.substring(2));
+                } else if (seg.startsWith('3103')) {
+                    result.weightRaw = parseInt(seg.substring(4));
+                    result.weightKg = result.weightRaw / 1000;
+                } else if (seg.startsWith('98')) {
+                    result.discount = parseInt(seg.substring(2));
+                } else if (seg.startsWith('21')) {
+                    result.uniqueId = seg.substring(2);
+                } else if (seg.startsWith('97')) {
+                    result.decimalPos = parseInt(seg.substring(2));
+                }
+            });
+
+            // Вычисляем итоговое количество
+            if (result.quantityRaw !== undefined) {
+                if (result.decimalPos) {
+                    result.quantity = result.quantityRaw / Math.pow(10, result.decimalPos);
+                } else {
+                    result.quantity = result.quantityRaw;
+                }
+            }
+
+            return result;
+        }
+
+        function generateTest() {
+            var goodsId = document.getElementById('gen-goodsId').value;
+            var type = document.getElementById('gen-type').value;
+            var quantity = parseFloat(document.getElementById('gen-quantity').value);
+            var weight = parseInt(document.getElementById('gen-weight').value);
+            var discount = parseInt(document.getElementById('gen-discount').value) || 0;
+
+            var params = {
+                goodsId: goodsId,
+                type: type,
+                discount: discount
+            };
+
+            if (type === 'piece') {
+                params.quantity = quantity;
+            } else {
+                params.weight = weight;
+            }
+
+            try {
+                var code = Generators.generateGS1Code(params);
+                
+                document.getElementById('gen-result').style.display = 'block';
+                document.getElementById('res-visual').innerHTML = visualize(code);
+                document.getElementById('res-raw').textContent = code.split(GS).join('[GS]');
+                document.getElementById('res-hex').textContent = toHex(code);
+
+                var parsed = parseGS1(code);
+                var parsedHtml = '<ul>';
+                parsedHtml += '<li><b>GoodsId:</b> ' + parsed.goodsId + '</li>';
+                if (parsed.quantityRaw !== undefined) {
+                    parsedHtml += '<li><b>Quantity_raw:</b> ' + parsed.quantityRaw + '</li>';
+                    if (parsed.decimalPos) {
+                        parsedHtml += '<li><b>DecimalPos (AI 97):</b> ' + parsed.decimalPos + '</li>';
+                        parsedHtml += '<li><b>Итоговое кол-во:</b> ' + parsed.quantityRaw + ' / 10^' + parsed.decimalPos + ' = <b style="color:green">' + parsed.quantity + ' шт</b></li>';
+                    } else {
+                        parsedHtml += '<li><b>DecimalPos:</b> отсутствует (целое число)</li>';
+                        parsedHtml += '<li><b>Итоговое кол-во:</b> <b style="color:green">' + parsed.quantity + ' шт</b></li>';
+                    }
+                }
+                if (parsed.weightRaw !== undefined) {
+                    parsedHtml += '<li><b>Weight_raw:</b> ' + parsed.weightRaw + ' г</li>';
+                    parsedHtml += '<li><b>Итоговый вес:</b> <b style="color:green">' + parsed.weightKg + ' кг</b></li>';
+                }
+                if (parsed.discount !== undefined) {
+                    parsedHtml += '<li><b>Скидка:</b> ' + parsed.discount + '%</li>';
+                }
+                if (parsed.uniqueId) {
+                    parsedHtml += '<li><b>UniqueID:</b> ' + parsed.uniqueId + '</li>';
+                }
+                parsedHtml += '</ul>';
+                document.getElementById('res-parsed').innerHTML = parsedHtml;
+
+                // Render QR
+                var qrContainer = document.getElementById('qr-container');
+                qrContainer.innerHTML = '';
+                var canvas = document.createElement('canvas');
+                bwipjs.toCanvas(canvas, {
+                    bcid: 'qrcode',
+                    text: code,
+                    scale: 4,
+                    eclevel: 'M'
+                });
+                qrContainer.appendChild(canvas);
+
+            } catch (e) {
+                alert('Ошибка: ' + e.message);
+            }
+        }
+
+        // Тесты по ТЗ (обновлённые)
         var tests = [
             {
-                name: 'Пример 1: Штучный товар, целое количество, без скидки',
-                params: {
-                    goodsId: '123',
-                    type: 'piece',
-                    quantity: 50,
-                    discount: 0
-                },
+                name: 'Пример 1 из ТЗ: Штучный, 50 шт, без скидки',
+                params: { goodsId: '123', type: 'piece', quantity: 50, discount: 0 },
                 expected: '99MPUC' + GS + '240123' + GS + '3700000050' + GS
             },
             {
-                name: 'Пример 2: Штучный товар, дробное количество, со скидкой',
-                params: {
-                    goodsId: '456789',
-                    type: 'piece',
-                    quantity: 12.45,
-                    discount: 10,
-                    uniqueId: 'ABC12345'
-                },
-                // DecimalPosition = 2, так как 12.45 имеет 2 знака после запятой
-                // Quantity_raw = 12.45 * 100 = 1245
-                expected: '99MPUC' + GS + '240456789' + GS + '3700001245' + GS + 
-                         '9810' + GS + '21ABC12345' + GS + '972' + GS
+                name: 'Пример 2 из ТЗ: Штучный, 12.45 шт, скидка 10%',
+                params: { goodsId: '456789', type: 'piece', quantity: 12.45, discount: 10, uniqueId: 'ABC12345' },
+                expected: '99MPUC' + GS + '240456789' + GS + '3700001245' + GS + '9810' + GS + '21ABC12345' + GS + '972' + GS
             },
             {
-                name: 'Пример 3: Весовой товар, со скидкой',
-                params: {
-                    goodsId: '888777',
-                    type: 'weight',
-                    weight: 500,
-                    discount: 5,
-                    uniqueId: 'XYZ67890'
-                },
-                expected: '99MPUC' + GS + '240888777' + GS + '3103000500' + GS + 
-                         '9805' + GS + '21XYZ67890' + GS
+                name: 'Пример 3 из ТЗ: Весовой, 500г, скидка 5%',
+                params: { goodsId: '888777', type: 'weight', weight: 500, discount: 5, uniqueId: 'XYZ67890' },
+                expected: '99MPUC' + GS + '240888777' + GS + '3103000500' + GS + '9805' + GS + '21XYZ67890' + GS
             },
             {
-                name: 'Пример 4: Весовой товар, без скидки',
-                params: {
-                    goodsId: '99',
-                    type: 'weight',
-                    weight: 1250,
-                    discount: 0
-                },
+                name: 'Пример 4 из ТЗ: Весовой, 1250г, без скидки',
+                params: { goodsId: '99', type: 'weight', weight: 1250, discount: 0 },
                 expected: '99MPUC' + GS + '24099' + GS + '3103001250' + GS
             },
             {
-                name: 'Тест 5: Штучный, дробное 1.5 шт, без скидки',
-                params: {
-                    goodsId: '777',
-                    type: 'piece',
-                    quantity: 1.5,
-                    discount: 0
-                },
-                // DecimalPosition = 1, Quantity_raw = 15
+                name: 'Ваш кейс: GoodsId 880, 0.5 шт, скидка 50%',
+                params: { goodsId: '880', type: 'piece', quantity: 0.5, discount: 50, uniqueId: 'TEST1234' },
+                // 0.5 шт → Quantity_raw = 5, DecimalPos = 1
+                expected: '99MPUC' + GS + '240880' + GS + '3700000005' + GS + '9850' + GS + '21TEST1234' + GS + '971' + GS
+            },
+            {
+                name: 'Дробное 1.5 шт, без скидки',
+                params: { goodsId: '777', type: 'piece', quantity: 1.5, discount: 0 },
                 expected: '99MPUC' + GS + '240777' + GS + '3700000015' + GS + '971' + GS
             },
             {
-                name: 'Тест 6: Штучный, 100.123 шт (3 знака), со скидкой 25%',
-                params: {
-                    goodsId: '12345',
-                    type: 'piece',
-                    quantity: 100.123,
-                    discount: 25,
-                    uniqueId: 'TEST1234'
-                },
-                // DecimalPosition = 3, Quantity_raw = 100123
-                expected: '99MPUC' + GS + '24012345' + GS + '3700100123' + GS + 
-                         '9825' + GS + '21TEST1234' + GS + '973' + GS
-            },
-            {
-                name: 'Тест 7: Штучный с measureDiv 0.25, количество 0.5 шт (2 порции)',
-                params: {
-                    goodsId: '880',
-                    type: 'piece',
-                    quantity: 2,  // 2 порции
-                    discount: 0,
-                    measureDiv: 0.25
-                },
-                // Количество порций = 2, БЕЗ AI 97
-                expected: '99MPUC' + GS + '240880' + GS + '3700000002' + GS
-            },
-            {
-                name: 'Тест 8: Штучный с measureDiv 0.25, 0.5 шт со скидкой 50%',
-                params: {
-                    goodsId: '880',
-                    type: 'piece',
-                    quantity: 2,  // 2 порции (0.5 / 0.25 = 2)
-                    discount: 50,
-                    uniqueId: '75FKWUIA',
-                    measureDiv: 0.25
-                },
-                // 2 порции, скидка 50%, uniqueId, БЕЗ AI 97
-                expected: '99MPUC' + GS + '240880' + GS + '3700000002' + GS + 
-                         '9850' + GS + '2175FKWUIA' + GS
-            },
-            {
-                name: 'Тест 9: Штучный с measureDiv 0.25, 1.0 шт (4 порции)',
-                params: {
-                    goodsId: '880',
-                    type: 'piece',
-                    quantity: 4,  // 4 порции (1.0 / 0.25 = 4)
-                    discount: 0,
-                    measureDiv: 0.25
-                },
-                expected: '99MPUC' + GS + '240880' + GS + '3700000004' + GS
-            },
-            {
-                name: 'Тест 10: Штучный с measureDiv 0.5, 1.5 шт (3 порции)',
-                params: {
-                    goodsId: '123',
-                    type: 'piece',
-                    quantity: 3,  // 3 порции (1.5 / 0.5 = 3)
-                    discount: 10,
-                    uniqueId: 'ABC12345',
-                    measureDiv: 0.5
-                },
-                expected: '99MPUC' + GS + '240123' + GS + '3700000003' + GS + 
-                         '9810' + GS + '21ABC12345' + GS
+                name: 'Дробное 0.25 шт, скидка 20%',
+                params: { goodsId: '999', type: 'piece', quantity: 0.25, discount: 20, uniqueId: 'ABCD1234' },
+                expected: '99MPUC' + GS + '240999' + GS + '3700000025' + GS + '9820' + GS + '21ABCD1234' + GS + '972' + GS
             }
         ];
 
@@ -200,7 +358,6 @@
                     var div = document.createElement('div');
                     div.className = 'test ' + (pass ? 'pass' : 'fail');
                     
-                    // Визуализация разделителей
                     var expectedVis = test.expected.split(GS).join('<GS>');
                     var actualVis = actual.split(GS).join('<GS>');
 
@@ -209,8 +366,7 @@
                         '<div class="expected">Ожидается: <code>' + expectedVis + '</code></div>' +
                         '<div class="actual">Получено: <code>' + actualVis + '</code></div>' +
                         '<div class="status ' + (pass ? 'pass' : 'fail') + '">' + 
-                        (pass ? '✓ PASS' : '✗ FAIL') + 
-                        '</div>';
+                        (pass ? '✓ PASS' : '✗ FAIL') + '</div>';
 
                     results.appendChild(div);
                 } catch (e) {
@@ -224,7 +380,6 @@
                 }
             });
 
-            // Summary
             var summary = document.createElement('div');
             summary.className = 'test ' + (failCount === 0 ? 'pass' : 'fail');
             summary.innerHTML = 
@@ -234,7 +389,6 @@
             results.appendChild(summary);
         }
 
-        // Run tests on load
         window.addEventListener('DOMContentLoaded', runTests);
     </script>
 </body>
