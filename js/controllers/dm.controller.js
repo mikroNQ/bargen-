@@ -139,7 +139,8 @@
         }
 
         // Update code text with flash animation
-        updateCodeText(result.code, secondaryResult)
+        var primaryCodeText = result.displayAsEan ? result.ean13Code : result.code;
+        updateCodeText(primaryCodeText, secondaryResult)
     }
 
     /**
@@ -172,7 +173,8 @@
         }
 
         // Update code text
-        updateCodeText(cached.code, cached.secondaryCode)
+        var primaryCodeText = cached.primaryDisplayAsEan ? primaryResult.ean13Code : cached.code;
+        updateCodeText(primaryCodeText, cached.secondaryCode)
 
         // Update info display
         var isRotationMode = dm.rotationList.length > 0;
