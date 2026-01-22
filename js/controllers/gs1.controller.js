@@ -71,6 +71,22 @@
             discMax = tmp;
         }
 
+        // Get measureDiv (коэффициент фасовки) для штучного товара
+        var measureDiv = 1;
+        if (productType === 'piece') {
+            var presetValue = Utils.$('gs1MeasureDivPreset').value;
+            if (presetValue === 'custom') {
+                measureDiv = parseFloat(Utils.$('gs1MeasureDiv').value) || 1;
+            } else {
+                measureDiv = parseFloat(presetValue) || 1;
+            }
+            
+            if (measureDiv <= 0) {
+                alert('Коэффициент фасовки должен быть больше 0!');
+                return;
+            }
+        }
+
         // Get quantity/weight settings
         var qtyMin, qtyMax, fixedQty, weightMin, weightMax, fixedWeight;
 
@@ -116,9 +132,27 @@
                 if (productType === 'piece') {
                     var quantity = qtyMode === 'fixed' ? fixedQty : 
                         (qtyMin + Math.random() * (qtyMax - qtyMin));
-                    // Round to 2 decimal places
-                    quantity = Math.round(quantity * 100) / 100;
-                    params.quantity = quantity;
+                    
+                    // Обработка с учётом measureDiv
+                    if (measureDiv !== 1) {
+                        // Товар с коэффициентом фасовки
+                        // Пересчитываем желаемое количество в порции
+                        var portions = Math.round(quantity / measureDiv);
+                        
+                        // Фактическое количество после округления
+                        var actualQuantity = portions * measureDiv;
+                        
+                        // Сохраняем количество порций (целое число)
+                        params.quantity = portions;
+                        params.measureDiv = measureDiv;
+                        params.actualQuantity = actualQuantity;
+                        params.desiredQuantity = quantity; // Исходное желаемое количество
+                    } else {
+                        // Обычный товар - округляем до 2 знаков
+                        quantity = Math.round(quantity * 100) / 100;
+                        params.quantity = quantity;
+                        params.measureDiv = 1;
+                    }
                 } else {
                     var weight = qtyMode === 'fixed' ? fixedWeight : 
                         Utils.randomWeight(weightMin, weightMax);
@@ -137,8 +171,11 @@
                         weight: params.weight,
                         discount: discount,
                         uniqueId: discount > 0 ? (params.uniqueId || Generators.generateUniqueId()) : null,
-                        decimalPosition: productType === 'piece' && params.quantity ? 
+                        decimalPosition: productType === 'piece' && params.quantity && !params.measureDiv ? 
                             Generators.calculateDecimalPosition(params.quantity) : 0,
+                        measureDiv: params.measureDiv || 1,
+                        actualQuantity: params.actualQuantity || params.quantity,
+                        desiredQuantity: params.desiredQuantity || params.quantity,
                         active: true
                     });
                 } catch (e) {
@@ -182,8 +219,8 @@
             State.gs1.folders.push(folder);
         }
 
-        // Add items to folder
-        folder.items = folder.items.concat(items);
+        // Replace items in folder (не добавлять к существующим)
+        folder.items = items;
         State.gs1.selectedFolderId = folder.id;
 
         Storage.save();
@@ -266,7 +303,12 @@
         // Update info display
         var infoText = '<b>GoodsId:</b> ' + item.goodsId + ' | ';
         if (item.type === 'piece') {
-            infoText += '<b>Кол-во:</b> ' + item.quantity + ' шт';
+            if (item.measureDiv && item.measureDiv !== 1) {
+                var actualQty = item.actualQuantity || (item.quantity * item.measureDiv);
+                infoText += '<b>Кол-во:</b> ' + item.quantity + ' порц. (≈' + actualQty.toFixed(2) + ' шт)';
+            } else {
+                infoText += '<b>Кол-во:</b> ' + item.quantity + ' шт';
+            }
         } else {
             infoText += '<b>Вес:</b> ' + Utils.formatWeight(item.weight);
         }
@@ -308,7 +350,12 @@
 
         var infoText = '<b>GoodsId:</b> ' + item.goodsId + ' | ';
         if (item.type === 'piece') {
-            infoText += '<b>Кол-во:</b> ' + item.quantity + ' шт';
+            if (item.measureDiv && item.measureDiv !== 1) {
+                var actualQty = item.actualQuantity || (item.quantity * item.measureDiv);
+                infoText += '<b>Кол-во:</b> ' + item.quantity + ' порц. (≈' + actualQty.toFixed(2) + ' шт)';
+            } else {
+                infoText += '<b>Кол-во:</b> ' + item.quantity + ' шт';
+            }
         } else {
             infoText += '<b>Вес:</b> ' + Utils.formatWeight(item.weight);
         }

@@ -361,6 +361,27 @@
                     <label>Фикс. количество</label>
                     <input type="number" id="gs1FixedQuantity" value="50" step="0.01">
                 </div>
+
+                <!-- Коэффициент фасовки -->
+                <div class="form-group" style="margin-top: 15px;">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        Коэффициент фасовки (measureDiv)
+                        <span style="cursor: help; color: #999; font-size: 0.9em;" title="Размер одной порции. Например, 0.25 означает, что товар продаётся по 0.25 шт. При генерации 0.5 шт с коэф. 0.25 в QR пойдёт 2 порции.">ⓘ</span>
+                    </label>
+                    <select id="gs1MeasureDivPreset" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="1">Обычный товар (1.0)</option>
+                        <option value="0.5">Половинки (0.5)</option>
+                        <option value="0.25">Четвертинки (0.25)</option>
+                        <option value="0.2">По 200г (0.2)</option>
+                        <option value="0.1">По 100г (0.1)</option>
+                        <option value="custom">Другое...</option>
+                    </select>
+                    <input type="number" id="gs1MeasureDiv" value="1" step="0.01" min="0.01" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 8px; display: none;">
+                    <div class="hint" style="margin-top: 5px; font-size: 0.8em; color: #666;">
+                        💡 При коэф. 0.25: количество 0.5 шт → 2 порции в QR (касса: 2×0.25=0.5 шт)
+                    </div>
+                </div>
             </div>
 
             <!-- Секция для весового товара -->

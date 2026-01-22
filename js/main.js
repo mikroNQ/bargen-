@@ -559,6 +559,22 @@
                 Utils.$('gs1-disc-random-group').classList.toggle('d-none', mode === 'fixed');
             };
         });
+
+        // MeasureDiv preset/custom toggle
+        if (Utils.$('gs1MeasureDivPreset')) {
+            Utils.$('gs1MeasureDivPreset').onchange = function() {
+                var value = this.value;
+                var customInput = Utils.$('gs1MeasureDiv');
+                
+                if (value === 'custom') {
+                    customInput.style.display = 'block';
+                    customInput.focus();
+                } else {
+                    customInput.style.display = 'none';
+                    customInput.value = value;
+                }
+            };
+        }
     }
 
     /**

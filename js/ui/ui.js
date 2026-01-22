@@ -529,9 +529,19 @@
                 div.className = 'weight-item' + (item.active ? ' active' : '');
 
                 var typeLabel = item.type === 'piece' ? 'Штучн' : 'Весов';
-                var valueText = item.type === 'piece' ? 
-                    item.quantity + ' шт' : 
-                    Utils.formatWeight(item.weight);
+                var valueText;
+                if (item.type === 'piece') {
+                    if (item.measureDiv && item.measureDiv !== 1) {
+                        // Товар с коэффициентом фасовки
+                        var actualQty = item.actualQuantity || (item.quantity * item.measureDiv);
+                        valueText = item.quantity + ' порц. (≈' + actualQty.toFixed(2) + ' шт)';
+                    } else {
+                        // Обычный товар
+                        valueText = item.quantity + ' шт';
+                    }
+                } else {
+                    valueText = Utils.formatWeight(item.weight);
+                }
                 var discountText = item.discount > 0 ? ' | ' + item.discount + '%' : '';
                 var barcodeIcon = item.showBarcode ? ' 📊' : '';
 

@@ -131,6 +131,56 @@
                 // DecimalPosition = 3, Quantity_raw = 100123
                 expected: '99MPUC' + GS + '24012345' + GS + '3700100123' + GS + 
                          '9825' + GS + '21TEST1234' + GS + '973' + GS
+            },
+            {
+                name: 'Тест 7: Штучный с measureDiv 0.25, количество 0.5 шт (2 порции)',
+                params: {
+                    goodsId: '880',
+                    type: 'piece',
+                    quantity: 2,  // 2 порции
+                    discount: 0,
+                    measureDiv: 0.25
+                },
+                // Количество порций = 2, БЕЗ AI 97
+                expected: '99MPUC' + GS + '240880' + GS + '3700000002' + GS
+            },
+            {
+                name: 'Тест 8: Штучный с measureDiv 0.25, 0.5 шт со скидкой 50%',
+                params: {
+                    goodsId: '880',
+                    type: 'piece',
+                    quantity: 2,  // 2 порции (0.5 / 0.25 = 2)
+                    discount: 50,
+                    uniqueId: '75FKWUIA',
+                    measureDiv: 0.25
+                },
+                // 2 порции, скидка 50%, uniqueId, БЕЗ AI 97
+                expected: '99MPUC' + GS + '240880' + GS + '3700000002' + GS + 
+                         '9850' + GS + '2175FKWUIA' + GS
+            },
+            {
+                name: 'Тест 9: Штучный с measureDiv 0.25, 1.0 шт (4 порции)',
+                params: {
+                    goodsId: '880',
+                    type: 'piece',
+                    quantity: 4,  // 4 порции (1.0 / 0.25 = 4)
+                    discount: 0,
+                    measureDiv: 0.25
+                },
+                expected: '99MPUC' + GS + '240880' + GS + '3700000004' + GS
+            },
+            {
+                name: 'Тест 10: Штучный с measureDiv 0.5, 1.5 шт (3 порции)',
+                params: {
+                    goodsId: '123',
+                    type: 'piece',
+                    quantity: 3,  // 3 порции (1.5 / 0.5 = 3)
+                    discount: 10,
+                    uniqueId: 'ABC12345',
+                    measureDiv: 0.5
+                },
+                expected: '99MPUC' + GS + '240123' + GS + '3700000003' + GS + 
+                         '9810' + GS + '21ABC12345' + GS
             }
         ];
 
